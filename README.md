@@ -1,13 +1,3 @@
-# Automate EC2 Deployment Assignment
-## Table of Contents
-
-# Automate EC2 Deployment Assignment
-
-
----
-
-## Project Overview
-
 This assignment demonstrates:
 
 4. Running the app on port 8080 or 80.
@@ -21,8 +11,8 @@ The app is a simple Spring Boot MVC application.
 ## Prerequisites
 
 - AWS account with Free Tier enabled
-- Terraform installed (for automation)
-- Java 21 installed (manual deployment)
+- Terraform installed
+- Java 21 installed
 - Maven and Git installed on EC2
 - SSH key pair for EC2 access
 
