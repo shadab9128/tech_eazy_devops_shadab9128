@@ -78,4 +78,114 @@ pkill -f hellomvc-0.0.1-SNAPSHOT.jar
 - Edit terraform file as according to your ec2 region.
 - You can pass different stages (Dev, Prod) to Terraform to pick different configs.
 
+-------------------------------------------------------------------------------------
+
+# Assignment 2
+
+## 📋 Assignment Overview
+This project automates the creation of AWS infrastructure including IAM roles, S3 buckets, EC2 instances, and log management systems as per the assignment requirements.
+
+## 🎯 Assignment Requirements Completed
+
+### ✅ 1. IAM Roles Creation
+- **S3 Read-Only Role** (`dev-s3-read-role`): Allows listing and reading objects from S3
+- **S3 Write-Only Role** (`dev-s3-uploader-role`): Allows creating buckets and uploading files (no read/download permissions)
+
+### ✅ 2. EC2 Instance Profile
+- **Instance Profile**: `Dev-uploader-profile` attached to EC2 instance
+- **IAM Role Attachment**: Write-only role attached via IAM instance profile
+
+### ✅ 3. Private S3 Bucket
+- **Bucket Name**: `techeazy-logs-devops` (configurable)
+- **Privacy**: Private bucket with blocked public access
+- **Validation**: Terminates with error if bucket name not provided
+
+### ✅ 4. EC2 Logs Upload
+- **Logs Archived**: `/var/log/cloud-init.log` uploaded to S3 on shutdown
+- **Destination**: `s3://techeazy-logs-devops/ec2/logs/`
+
+### ✅ 5. Application Logs Upload
+- **Application**: Spring Boot app deployed on EC2
+- **Logs Uploaded**: Application logs to `s3://techeazy-logs-devops/app/logs/`
+- **Automation**: Systemd service for shutdown upload
+
+### ✅ 6. S3 Lifecycle Rules
+- **Retention**: Logs automatically deleted after 7 days
+- **Configuration**: Lifecycle rules for both EC2 and app logs
+
+### ✅ 7. Read-Only Access Verification
+- **Verification**: Files can be listed using read-only role
+- **Testing**: Successful listing of S3 bucket contents
+
+## Deployment Steps
+### 1. Plan Deployment
+```bash
+terraform plan   -var="ami_id=<Your_EC2_AMI_ID>"   -var="key_name=<Your_Key_Pair_Name>"   -var="s3_bucket_name
+=<Bucket_Name>"
+```
+### 2. Apply configuration
+```bash
+terraform apply   -var="ami_id=<Your_EC2_AMI_ID>"   -var="key_name=<Your_Key_Pair_Name>"   -var="s3_bucket_name
+=<Bucket_Name>" -auto-approve
+```
+
+## Verification
+```bash
+# Check created resources
+terraform output
+
+# SSH into EC2 instance
+ssh -i your-key.pem ec2-user@<instance-ip>
+
+# Test log upload manually
+sudo /usr/local/bin/upload-logs.sh
+
+# Verify S3 contents
+aws s3 ls s3://Bucket-Name/ --recursive
+```
+## S3 Bucket Structure
+Bucket-Name/
+├── ec2/logs/
+│   ├── cloud-init-123XYZxxxxxxx.log
+│   └── test-upload.log
+└── app/logs/
+    └── XXXXXXXXX.log
+
+## Testing
+```bash
+# Manual upload test
+sudo /usr/local/bin/upload-logs.sh
+
+# Verify upload
+aws s3 ls s3://Your-Bucket-Nmae/ --recursive
+```
+## Read Access Test(Private)
+```bash
+aws s3 ls s3://techeazy-logs-devops/ --recursive --human-readable
+```
+
+## Application Test
+```bash
+curl http://localhost:8080
+```
+
+## Cleanup
+```bash
+# Destroy all resources
+terraform destroy -auto-approve
+
+# Manual cleanup if needed
+aws s3 rb s3://Your-Bucket-name --force
+aws iam delete-role --role-name Your-role-name
+```
+## Outputs
+After successful deployment:
+
+S3 Bucket:
+
+EC2 Instance ID:
+
+Public DNS:
+
+Public IP:
 
