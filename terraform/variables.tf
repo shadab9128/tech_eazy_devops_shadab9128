@@ -32,3 +32,8 @@ variable "github_repo" {
   default     = "https://github.com/Trainings-TechEazy/test-repo-for-devops"
 }
 
+variable "s3_bucket_name" {
+  description = "S3 bucket name for logs"
+  type        = string
+}
+

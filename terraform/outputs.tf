@@ -13,3 +13,8 @@ output "public_dns" {
   value       = aws_instance.app.public_dns
 }
 
+output "bucket_name" {
+  description = "Name of the S3 bucket for logs"
+  value       = aws_s3_bucket.logs.bucket
+}
+
