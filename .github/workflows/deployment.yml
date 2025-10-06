@@ -40,8 +40,12 @@ jobs:
         run: terraform init
 
       - name: Import existing Target Group
-        working-directory: Assignment-3/terraform
         run: terraform import aws_lb_target_group.tg ${{ secrets.TG_ARN }}
+        working-directory: Assignment-3/terraform
+
+      - name: Import existing Listener
+        run: terraform import aws_lb_listener.http_listener ${{ secrets.LISTENER_ARN }}
+        working-directory: Assignment-3/terraform
 
       - name: Terraform Plan
         working-directory: Assignment-3/terraform
