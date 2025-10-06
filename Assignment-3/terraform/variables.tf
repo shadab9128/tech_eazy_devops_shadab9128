@@ -1,9 +1,6 @@
 variable "region" {
   default = "eu-north-1"
 }
-variable "stage" {
-  default = "dev"
-}
 variable "key_name" {
   description = "EC2 key pair name"
 }
