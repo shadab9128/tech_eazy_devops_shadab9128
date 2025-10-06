@@ -33,19 +33,24 @@ jobs:
         working-directory: Assignment-3/terraform
         run: terraform init
 
-      - name: Import existing Target Group (optional)
+      - name: Import existing Target Group
         working-directory: Assignment-3/terraform
         run: |
           if ! terraform state list | grep -q "aws_lb_target_group.tg"; then
             terraform import aws_lb_target_group.tg ${{ secrets.TG_ARN }}
+          else
+            echo "Target Group already in state, skipping import."
           fi
 
-      - name: Import existing Listener (optional)
+      - name: Import existing Listener
         working-directory: Assignment-3/terraform
         run: |
           if ! terraform state list | grep -q "aws_lb_listener.http_listener"; then
             terraform import aws_lb_listener.http_listener ${{ secrets.LISTENER_ARN }}
+          else
+            echo "Listener already in state, skipping import."
           fi
+
 
       - name: Terraform Plan
         working-directory: Assignment-3/terraform
