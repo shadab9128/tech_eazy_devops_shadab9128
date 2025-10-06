@@ -127,7 +127,7 @@ resource "aws_lb" "alb" {
 
 # Target Group & Listener
 resource "aws_lb_target_group" "tg" {
-  name     = "${var.stage != "" ? var.stage : "dev"}-tg"
+  name     = "dev-tg"
   port     = 80
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.default.id
@@ -143,7 +143,7 @@ resource "aws_lb_target_group" "tg" {
   }
 
   tags = {
-    Name = "${var.stage != "" ? var.stage : "dev"}-tg"
+    Name = "dev-tg"
   }
 }
 
