@@ -2,7 +2,7 @@ name: Deploy to AWS
 
 on:
   push:
-    branches: [ main ]
+    branches: [ assignment-3 ]
   workflow_dispatch:
     inputs:
       stage:
@@ -37,15 +37,19 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
         
     - name: Terraform Init
+      working-directory: Assignment-3/terraform
       run: terraform init
       
     - name: Terraform Plan
+      working-directory: Assignment-3/terraform
       run: terraform plan -var="stage=${{ github.event.inputs.stage || 'dev' }}" -var="key_name=${{ vars.AWS_KEY_PAIR }}" -var="s3_bucket_name=techeazy-logs-devops"
       
     - name: Terraform Apply
+      working-directory: Assignment-3/terraform
       run: terraform apply -auto-approve -var="stage=${{ github.event.inputs.stage || 'dev' }}" -var="key_name=${{ vars.AWS_KEY_PAIR }}" -var="s3_bucket_name=techeazy-logs-devops"
       
     - name: Get ALB DNS
+      working-directory: Assignment-3/terraform
       id: alb
       run: echo "dns=$(terraform output -raw alb_dns)" >> $GITHUB_OUTPUT
       
