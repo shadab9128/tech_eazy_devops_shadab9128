@@ -58,7 +58,7 @@ jobs:
     - name: Health Check
       run: |
         echo "Waiting for application to be healthy..."
-        timeout 300 bash -c 'until curl -f http://${{ steps.alb.outputs.dns }}/health; do sleep 10; done'
+        timeout 300 bash -c 'until curl -f http://${{ steps.alb.outputs.dns }}/hello; do sleep 10; done'
         echo "Application is healthy!"
         
     - name: Deployment Summary
