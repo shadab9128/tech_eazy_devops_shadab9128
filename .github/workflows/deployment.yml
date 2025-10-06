@@ -41,7 +41,7 @@ jobs:
 
       - name: Terraform Apply
         working-directory: Assignment-3/terraform
-        run: terraform apply -auto-approve -var="stage=${{ github.event.inputs.stage }}" -var="key_name=${{ vars.AWS_KEY_PAIR }}"
+        run: terraform apply -auto-approve -var="stage=dev" -var="key_name=${{ vars.AWS_KEY_PAIR }}"
 
       - name: Show ALB DNS
         working-directory: Assignment-3/terraform
