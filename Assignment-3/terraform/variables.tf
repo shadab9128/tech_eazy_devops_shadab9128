@@ -3,6 +3,7 @@ variable "region" {
 }
 variable "key_name" {
   description = "EC2 key pair name"
+  default = "wisecow"
 }
 variable "ami_id" {
   description = "AMI ID for EC2 instances"
