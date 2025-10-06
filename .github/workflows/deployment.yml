@@ -69,4 +69,6 @@ jobs:
       - name: Deployment Summary
         run: |
           echo "🚀 Deployment Complete!"
-          echo
+          echo "Stage: ${{ github.event.inputs.stage }}"
+          echo "ALB DNS: ${{ steps.alb.outputs.dns }}"
+          echo "Application URL: http://${{ steps.alb.outputs.dns }}/"
