@@ -40,5 +40,7 @@ jobs:
 
       - name: Show ALB DNS
         working-directory: Assignment-3/terraform
-        run: echo "ALB DNS: $(terraform output -raw alb_dns)"
+        run: |
+          echo "ALB DNS:"
+          terraform output -raw alb_dns
 
