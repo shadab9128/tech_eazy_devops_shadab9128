@@ -33,22 +33,18 @@ jobs:
         working-directory: Assignment-3/terraform
         run: terraform init
 
-      - name: Import existing Target Group (if not already in state)
+      - name: Import existing Target Group (optional)
         working-directory: Assignment-3/terraform
         run: |
           if ! terraform state list | grep -q "aws_lb_target_group.tg"; then
             terraform import aws_lb_target_group.tg ${{ secrets.TG_ARN }}
-          else
-            echo "Target Group already in state, skipping import."
           fi
 
-      - name: Import existing Listener (if not already in state)
+      - name: Import existing Listener (optional)
         working-directory: Assignment-3/terraform
         run: |
           if ! terraform state list | grep -q "aws_lb_listener.http_listener"; then
             terraform import aws_lb_listener.http_listener ${{ secrets.LISTENER_ARN }}
-          else
-            echo "Listener already in state, skipping import."
           fi
 
       - name: Terraform Plan
@@ -73,6 +69,4 @@ jobs:
       - name: Deployment Summary
         run: |
           echo "🚀 Deployment Complete!"
-          echo "Stage: ${{ github.event.inputs.stage }}"
-          echo "ALB DNS: ${{ steps.alb.outputs.dns }}"
-          echo "Application URL: http://${{ steps.alb.outputs.dns }}/"
+          echo
