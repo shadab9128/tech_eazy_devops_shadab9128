@@ -29,66 +29,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # Initialize Terraform (first run)
       - name: 🧱 Terraform Init
         working-directory: Assignment-3/terraform
         run: terraform init -input=false
 
-      # ✅ Safe Target Group Import (non-breaking)
-      - name: 🧩 Import existing Target Group (safe import)
-        working-directory: Assignment-3/terraform
-        continue-on-error: true
-        run: |
-          echo "🔍 Checking if Target Group exists in Terraform state..."
-          terraform init -input=false >/dev/null
-          if terraform state list 2>/dev/null | grep -q "aws_lb_target_group.tg"; then
-            echo "✅ Target Group already managed by Terraform. Skipping import."
-          else
-            echo "⚙️ Importing existing Target Group..."
-            terraform import aws_lb_target_group.tg "${{ secrets.TG_ARN }}" || echo "⚠️ Import skipped (already managed)."
-          fi
-
-      # ✅ Safe Listener Import (non-breaking)
-      - name: 🧩 Import existing Listener (safe import)
-        working-directory: Assignment-3/terraform
-        continue-on-error: true
-        run: |
-          echo "🔍 Checking if Listener exists in Terraform state..."
-          terraform init -input=false >/dev/null
-          if terraform state list 2>/dev/null | grep -q "aws_lb_listener.http_listener"; then
-            echo "✅ Listener already managed by Terraform. Skipping import."
-          else
-            echo "⚙️ Importing existing Listener..."
-            terraform import aws_lb_listener.http_listener "${{ secrets.LISTENER_ARN }}" || echo "⚠️ Import skipped (already managed)."
-          fi
-
-      # Terraform Plan (preview)
       - name: 🧮 Terraform Plan
         working-directory: Assignment-3/terraform
         run: terraform plan -var="stage=${{ github.event.inputs.stage }}" -var="key_name=${{ vars.AWS_KEY_PAIR }}"
 
-      # Terraform Apply (deploy)
       - name: 🚀 Terraform Apply
         working-directory: Assignment-3/terraform
         run: terraform apply -auto-approve -var="stage=${{ github.event.inputs.stage }}" -var="key_name=${{ vars.AWS_KEY_PAIR }}"
-
-      # Fetch ALB DNS
-      - name: 🌐 Get ALB DNS
-        working-directory: Assignment-3/terraform
-        id: alb
-        run: echo "dns=$(terraform output -raw alb_dns)" >> $GITHUB_OUTPUT
-
-      # Health check
-      - name: 🩺 Health Check
-        run: |
-          echo "Waiting for application to be healthy..."
-          timeout 300 bash -c 'until curl -fs http://${{ steps.alb.outputs.dns }}/hello; do sleep 10; done'
-          echo "✅ Application is healthy and responding."
-
-      # Summary
-      - name: 📋 Deployment Summary
-        run: |
-          echo "✅ Deployment Completed Successfully!"
-          echo "Stage: ${{ github.event.inputs.stage }}"
-          echo "ALB DNS: ${{ steps.alb.outputs.dns }}"
-          echo "App URL: http://${{ steps.alb.outputs.dns }}/"
