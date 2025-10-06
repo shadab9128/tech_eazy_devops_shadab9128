@@ -35,8 +35,8 @@ jobs:
 
       - name: 🧮 Terraform Plan
         working-directory: Assignment-3/terraform
-        run: terraform plan -var="stage=${{ github.event.inputs.stage }}" -var="key_name=${{ vars.AWS_KEY_PAIR }}"
+        run: terraform plan -var="stage=dev" -var="key_name=${{ vars.key_name }}"
 
       - name: 🚀 Terraform Apply
         working-directory: Assignment-3/terraform
-        run: terraform apply -auto-approve -var="stage=${{ github.event.inputs.stage }}" -var="key_name=${{ vars.AWS_KEY_PAIR }}"
+        run: terraform apply -auto-approve -var="stage=dev" -var="key_name=${{ vars.key_name }}"
