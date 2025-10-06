@@ -172,12 +172,14 @@ resource "aws_lb_target_group" "tg" {
   vpc_id   = data.aws_vpc.default.id
 
   health_check {
-    path                = "/hello"
-    protocol            = "HTTP"
-    interval            = 30
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-  }
+  path                = "/hello"
+  port                = "8080"
+  protocol            = "HTTP"
+  healthy_threshold   = 2
+  unhealthy_threshold = 2
+  interval            = 30
+  timeout             = 5
+}
 
   tags = {
     Name = "${var.stage}-tg"
