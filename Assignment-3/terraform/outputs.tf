@@ -14,7 +14,7 @@ output "alb_logs_bucket" {
 }
 
 #output "asg_name" {
- # description = "AutoScaling Group name"
-  #value       = aws_autoscaling_group.asg.name
+# description = "AutoScaling Group name"
+#value       = aws_autoscaling_group.asg.name
 #}
 

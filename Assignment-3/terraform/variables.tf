@@ -37,3 +37,13 @@ variable "github_repo" {
   default     = "https://github.com/Trainings-TechEazy/test-repo-for-devops"
 }
 
+variable "vpc_id" {
+  description = "VPC ID for the Load Balancer and Target Group"
+  type        = string
+  default     = ""
+}
+
+variable "ami_id" {
+  description = "AMI ID for EC2 instances"
+  type        = string
+}
