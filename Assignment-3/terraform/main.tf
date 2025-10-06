@@ -43,6 +43,21 @@ resource "aws_security_group" "sg" {
   tags = { Name = "${var.stage}-sg" }
 }
 
+# -----------------------------
+# Default VPC
+# -----------------------------
+data "aws_vpc" "default" {
+  default = true
+}
+
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]  # must reference the declared VPC
+  }
+}
+
+
 # Default VPC & Subnets
 data "aws_subnets" "default" {
   filter {
