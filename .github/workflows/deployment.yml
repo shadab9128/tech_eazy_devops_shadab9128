@@ -1,10 +1,10 @@
-name: Deploy to AWS
+name: 🚀 Deploy Terraform Infrastructure to AWS
 
 on:
   workflow_dispatch:
     inputs:
       stage:
-        description: "Deployment stage"
+        description: "Deployment stage (e.g. dev, prod)"
         required: true
         default: "dev"
 
@@ -16,79 +16,73 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: 🧾 Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Terraform
+      - name: ⚙️ Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Configure AWS credentials
+      - name: 🔐 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Terraform Init
+      - name: 🏗️ Terraform Init
         working-directory: Assignment-3/terraform
-        run: terraform init -reconfigure -input=false
+        run: terraform init -input=false
 
-      # ✅ Safe import for existing Target Group
-      - name: Import existing Target Group (only if missing)
+      - name: 🧩 Import existing Target Group (safe import)
         working-directory: Assignment-3/terraform
         run: |
-          echo "🔍 Checking if Target Group already exists in remote state..."
-          terraform init -reconfigure -input=false
+          echo "🔍 Checking Target Group..."
           if terraform state list | grep -q "aws_lb_target_group.tg"; then
-            echo "✅ Target Group already in state — skipping import."
+            echo "✅ Target Group already managed — skipping import."
           else
-            echo "⚙️ Importing Target Group..."
-            terraform import aws_lb_target_group.tg "${{ secrets.TG_ARN }}"
+            echo "⚙️ Importing existing Target Group..."
+            terraform import aws_lb_target_group.tg "${{ secrets.TG_ARN }}" || echo "⚠️ Skipping import — already managed or not found."
           fi
 
-      # ✅ Safe import for existing Listener
-      - name: Import existing Listener (only if missing)
+      - name: 🧩 Import existing Listener (safe import)
         working-directory: Assignment-3/terraform
         run: |
-          echo "🔍 Checking if Listener already exists in remote state..."
-          terraform init -reconfigure -input=false
+          echo "🔍 Checking Listener..."
           if terraform state list | grep -q "aws_lb_listener.http_listener"; then
-            echo "✅ Listener already in state — skipping import."
+            echo "✅ Listener already managed — skipping import."
           else
-            echo "⚙️ Importing Listener..."
-            terraform import aws_lb_listener.http_listener "${{ secrets.LISTENER_ARN }}"
+            echo "⚙️ Importing existing Listener..."
+            terraform import aws_lb_listener.http_listener "${{ secrets.LISTENER_ARN }}" || echo "⚠️ Skipping import — already managed or not found."
           fi
 
-      - name: Terraform Plan
+      - name: 🧮 Terraform Plan
         working-directory: Assignment-3/terraform
-        run: |
-          terraform plan \
-            -var="stage=${{ github.event.inputs.stage }}" \
-            -var="key_name=${{ vars.AWS_KEY_PAIR }}" \
-            -var="s3_bucket_name=techeazy-logs-devops"
+        run: terraform plan \
+          -var="stage=${{ github.event.inputs.stage }}" \
+          -var="key_name=${{ vars.AWS_KEY_PAIR }}" \
+          -input=false
 
-      - name: Terraform Apply
+      - name: 🚀 Terraform Apply
         working-directory: Assignment-3/terraform
-        run: |
-          terraform apply -auto-approve \
-            -var="stage=${{ github.event.inputs.stage }}" \
-            -var="key_name=${{ vars.AWS_KEY_PAIR }}" \
-            -var="s3_bucket_name=techeazy-logs-devops"
+        run: terraform apply -auto-approve \
+          -var="stage=${{ github.event.inputs.stage }}" \
+          -var="key_name=${{ vars.AWS_KEY_PAIR }}" \
+          -input=false
 
-      - name: Get ALB DNS
+      - name: 🌐 Get ALB DNS
         working-directory: Assignment-3/terraform
         id: alb
         run: echo "dns=$(terraform output -raw alb_dns)" >> $GITHUB_OUTPUT
 
-      - name: Health Check
+      - name: 🩺 Health Check
         run: |
-          echo "Waiting for application to be healthy..."
-          timeout 300 bash -c 'until curl -f http://${{ steps.alb.outputs.dns }}/hello; do sleep 10; done'
+          echo "⏳ Waiting for application to become healthy..."
+          timeout 300 bash -c 'until curl -fs "http://${{ steps.alb.outputs.dns }}/hello"; do sleep 10; done'
           echo "✅ Application is healthy!"
 
-      - name: Deployment Summary
+      - name: 📄 Deployment Summary
         run: |
-          echo "🚀 Deployment Complete!"
+          echo "✅ Deployment Complete!"
           echo "Stage: ${{ github.event.inputs.stage }}"
           echo "ALB DNS: ${{ steps.alb.outputs.dns }}"
-          echo "Application URL: http://${{ steps.alb.outputs.dns }}/"
+          echo "🌍 Application URL: http://${{ steps.alb.outputs.dns }}/"
