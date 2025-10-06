@@ -33,24 +33,27 @@ jobs:
         working-directory: Assignment-3/terraform
         run: terraform init
 
-      - name: Import existing Target Group
+      - name: Check & Import existing Target Group (safe)
         working-directory: Assignment-3/terraform
         run: |
-          if ! terraform state list | grep -q "aws_lb_target_group.tg"; then
-            terraform import aws_lb_target_group.tg ${{ secrets.TG_ARN }}
+          terraform state pull > current_state.json || echo "{}" > current_state.json
+          if grep -q '"aws_lb_target_group.tg"' current_state.json; then
+            echo "✅ Target Group already in state, skipping import."
           else
-            echo "Target Group already in state, skipping import."
+            echo "⚙️ Importing Target Group..."
+            terraform import aws_lb_target_group.tg ${{ secrets.TG_ARN }} || echo "Import skipped"
           fi
 
-      - name: Import existing Listener
+      - name: Check & Import existing Listener (safe)
         working-directory: Assignment-3/terraform
         run: |
-          if ! terraform state list | grep -q "aws_lb_listener.http_listener"; then
-            terraform import aws_lb_listener.http_listener ${{ secrets.LISTENER_ARN }}
+          terraform state pull > current_state.json || echo "{}" > current_state.json
+          if grep -q '"aws_lb_listener.http_listener"' current_state.json; then
+            echo "✅ Listener already in state, skipping import."
           else
-            echo "Listener already in state, skipping import."
+            echo "⚙️ Importing Listener..."
+            terraform import aws_lb_listener.http_listener ${{ secrets.LISTENER_ARN }} || echo "Import skipped"
           fi
-
 
       - name: Terraform Plan
         working-directory: Assignment-3/terraform
@@ -69,11 +72,11 @@ jobs:
         run: |
           echo "Waiting for application to be healthy..."
           timeout 300 bash -c 'until curl -f http://${{ steps.alb.outputs.dns }}/hello; do sleep 10; done'
-          echo "Application is healthy!"
+          echo "✅ Application is healthy!"
 
       - name: Deployment Summary
         run: |
           echo "🚀 Deployment Complete!"
           echo "Stage: ${{ github.event.inputs.stage }}"
           echo "ALB DNS: ${{ steps.alb.outputs.dns }}"
-          echo "Application URL: http://${{ steps.alb.outputs.dns }}/"
+          echo "App URL: http://${{ steps.alb.outputs.dns }}/"
