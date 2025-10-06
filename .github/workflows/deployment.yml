@@ -2,7 +2,7 @@ name: Deploy to AWS
 
 on:
   push:
-    branches: [ assignment-3 ]
+    branches: [ main ]
   workflow_dispatch:
     inputs:
       stage:
@@ -25,6 +25,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        ref: assignment-3  # This checks out assignment-3 branch code
       
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
