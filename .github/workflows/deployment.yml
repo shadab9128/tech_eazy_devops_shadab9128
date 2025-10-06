@@ -45,7 +45,7 @@ jobs:
 
       - name: Terraform Plan
         working-directory: Assignment-3/terraform
-        run: terraform plan -auto-approve -var="stage=dev" -var="key_name=${{ secrets.EC2_KEY_NAME }}"
+        run: terraform plan -var="stage=dev" -var="key_name=${{ secrets.EC2_KEY_NAME }}"
 
       - name: Terraform Apply
         working-directory: Assignment-3/terraform
