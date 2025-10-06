@@ -31,37 +31,49 @@ jobs:
 
       - name: Terraform Init
         working-directory: Assignment-3/terraform
-        run: terraform init
+        run: terraform init -reconfigure -input=false
 
-      - name: Check & Import existing Target Group (safe)
+      # ✅ Safe import for existing Target Group
+      - name: Import existing Target Group (only if missing)
         working-directory: Assignment-3/terraform
         run: |
-          terraform state pull > current_state.json || echo "{}" > current_state.json
-          if grep -q '"aws_lb_target_group.tg"' current_state.json; then
-            echo "✅ Target Group already in state, skipping import."
+          echo "🔍 Checking if Target Group already exists in remote state..."
+          terraform init -reconfigure -input=false
+          if terraform state list | grep -q "aws_lb_target_group.tg"; then
+            echo "✅ Target Group already in state — skipping import."
           else
             echo "⚙️ Importing Target Group..."
-            terraform import aws_lb_target_group.tg ${{ secrets.TG_ARN }} || echo "Import skipped"
+            terraform import aws_lb_target_group.tg "${{ secrets.TG_ARN }}"
           fi
 
-      - name: Check & Import existing Listener (safe)
+      # ✅ Safe import for existing Listener
+      - name: Import existing Listener (only if missing)
         working-directory: Assignment-3/terraform
         run: |
-          terraform state pull > current_state.json || echo "{}" > current_state.json
-          if grep -q '"aws_lb_listener.http_listener"' current_state.json; then
-            echo "✅ Listener already in state, skipping import."
+          echo "🔍 Checking if Listener already exists in remote state..."
+          terraform init -reconfigure -input=false
+          if terraform state list | grep -q "aws_lb_listener.http_listener"; then
+            echo "✅ Listener already in state — skipping import."
           else
             echo "⚙️ Importing Listener..."
-            terraform import aws_lb_listener.http_listener ${{ secrets.LISTENER_ARN }} || echo "Import skipped"
+            terraform import aws_lb_listener.http_listener "${{ secrets.LISTENER_ARN }}"
           fi
 
       - name: Terraform Plan
         working-directory: Assignment-3/terraform
-        run: terraform plan -var="stage=${{ github.event.inputs.stage }}" -var="key_name=${{ vars.AWS_KEY_PAIR }}" -var="s3_bucket_name=techeazy-logs-devops"
+        run: |
+          terraform plan \
+            -var="stage=${{ github.event.inputs.stage }}" \
+            -var="key_name=${{ vars.AWS_KEY_PAIR }}" \
+            -var="s3_bucket_name=techeazy-logs-devops"
 
       - name: Terraform Apply
         working-directory: Assignment-3/terraform
-        run: terraform apply -auto-approve -var="stage=${{ github.event.inputs.stage }}" -var="key_name=${{ vars.AWS_KEY_PAIR }}" -var="s3_bucket_name=techeazy-logs-devops"
+        run: |
+          terraform apply -auto-approve \
+            -var="stage=${{ github.event.inputs.stage }}" \
+            -var="key_name=${{ vars.AWS_KEY_PAIR }}" \
+            -var="s3_bucket_name=techeazy-logs-devops"
 
       - name: Get ALB DNS
         working-directory: Assignment-3/terraform
@@ -79,4 +91,4 @@ jobs:
           echo "🚀 Deployment Complete!"
           echo "Stage: ${{ github.event.inputs.stage }}"
           echo "ALB DNS: ${{ steps.alb.outputs.dns }}"
-          echo "App URL: http://${{ steps.alb.outputs.dns }}/"
+          echo "Application URL: http://${{ steps.alb.outputs.dns }}/"
