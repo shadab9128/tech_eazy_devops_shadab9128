@@ -127,24 +127,26 @@ resource "aws_lb" "alb" {
 
 # Target Group & Listener
 resource "aws_lb_target_group" "tg" {
-  name     = "${var.stage}-tg"
+  name     = "${var.stage != "" ? var.stage : "dev"}-tg"
   port     = 80
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.default.id
+
   health_check {
-  path                = "/hello"
-  port                = "8080"
-  protocol            = "HTTP"
-  healthy_threshold   = 2
-  unhealthy_threshold = 2
-  interval            = 30
-  timeout             = 5
-}
+    path                = "/hello"
+    port                = "8080"
+    protocol            = "HTTP"
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    interval            = 30
+    timeout             = 5
+  }
 
   tags = {
-    Name = "${var.stage}-tg"
+    Name = "${var.stage != "" ? var.stage : "dev"}-tg"
   }
 }
+
 
 resource "aws_lb_listener" "listener" {
   load_balancer_arn = aws_lb.alb.arn
