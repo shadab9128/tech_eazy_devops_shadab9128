@@ -96,10 +96,10 @@ resource "aws_iam_instance_profile" "profile" {
   role = aws_iam_role.ec2_role.name
 }
 
-# EC2 instance (Free tier t2.micro)
+# EC2 instance (Free tier t3.micro)
 resource "aws_instance" "app" {
   ami                         = var.ami_id
-  instance_type               = "t2.micro"
+  instance_type               = "t3.micro"
   subnet_id                   = element(data.aws_subnets.default.ids, 0)
   vpc_security_group_ids      = [aws_security_group.sg.id]
   iam_instance_profile        = aws_iam_instance_profile.profile.name
