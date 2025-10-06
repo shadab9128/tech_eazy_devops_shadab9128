@@ -127,10 +127,10 @@ resource "aws_lb" "alb" {
 
 # Target Group & Listener
 resource "aws_lb_target_group" "tg" {
-  name     = "dev-tg"
+  name     = "dummy-tg"
   port     = 80
   protocol = "HTTP"
-  vpc_id   = data.aws_vpc.default.id
+  vpc_id   = "vpc-xxxxxx"
 
   health_check {
     path                = "/hello"
@@ -148,13 +148,13 @@ resource "aws_lb_target_group" "tg" {
 }
 
 
-resource "aws_lb_listener" "listener" {
+resource "aws_lb_listener" "http_listener" {
   load_balancer_arn = aws_lb.alb.arn
   port              = 80
   protocol          = "HTTP"
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.tg.arn
+    target_group_arn = tg-placeholder
   }
 }
 
