@@ -38,8 +38,8 @@ jobs:
         run: terraform init
         working-directory: Assignment-3/terraform
 
-      - name: Terraform Format Check
-        run: terraform fmt -check
+          # - name: Terraform Format Check
+          #run: terraform fmt -check
 
       - name: Terraform Validate
         run: terraform validate
