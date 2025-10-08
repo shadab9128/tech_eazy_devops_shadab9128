@@ -10,13 +10,9 @@ jobs:
   terraform-deploy:
     name: Terraform Apply
     runs-on: ubuntu-latest
-
-    env:
-      AWS_REGION: eu-north-1
-
     defaults:
       run:
-        working-directory: Assignment-3  # Terraform folder path
+        working-directory: Assignment-3
 
     steps:
       - name: Checkout repo
