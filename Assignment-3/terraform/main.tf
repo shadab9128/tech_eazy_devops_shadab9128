@@ -16,18 +16,22 @@ provider "aws" {
 }
 
 # -----------------------------
-# Random suffix for unique names
+# Random ID
 # -----------------------------
-resource "random_id" "suffix" {
-  byte_length = 4
+resource "random_id" "rand_id" {
+  byte_length = 8
+  keepers = {
+    # Change this to force new random ID
+    stage = var.stage
+  }
 }
 
 # -----------------------------
-# Security Group (HTTP + SSH)
+# Security Group
 # -----------------------------
 resource "aws_security_group" "sg" {
-  name        = "${var.stage}-sg-${random_id.suffix.hex}"
-  description = "Allow HTTP and SSH inbound"
+  name        = "${var.stage}-sg-${random_id.rand_id.hex}"
+  description = "Allow SSH and HTTP"
 
   ingress {
     from_port   = 22
@@ -49,6 +53,12 @@ resource "aws_security_group" "sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   tags = {
     Name  = "${var.stage}-sg"
@@ -57,7 +67,7 @@ resource "aws_security_group" "sg" {
 }
 
 # -----------------------------
-# Default VPC & Subnets
+# Networking - Default VPC and Subnets
 # -----------------------------
 data "aws_vpc" "default" {
   default = true
@@ -71,139 +81,137 @@ data "aws_subnets" "default" {
 }
 
 # -----------------------------
-# S3 Bucket for logs
+# S3 Buckets
 # -----------------------------
-resource "aws_s3_bucket" "logs" {
-  bucket        = "${var.stage}-logs-${random_id.suffix.hex}"
-  force_destroy = true
 
+# Logs bucket
+resource "aws_s3_bucket" "logs" {
+  bucket = var.s3_bucket_name
   tags = {
-    Name  = "${var.stage}-logs"
+    Name  = var.s3_bucket_name
     Stage = var.stage
   }
 }
 
-# -----------------------------
-# IAM Role & Policy for EC2
-# -----------------------------
-resource "aws_iam_role" "ec2_role" {
-  name = "${var.stage}-ec2-role-${random_id.suffix.hex}"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { Service = "ec2.amazonaws.com" }
-      Action    = "sts:AssumeRole"
-    }]
-  })
+# Remove ACL resources and use bucket ownership controls
+resource "aws_s3_bucket_ownership_controls" "logs" {
+  bucket = aws_s3_bucket.logs.id
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
 }
 
-resource "aws_iam_policy" "s3_policy" {
-  name   = "${var.stage}-s3-policy-${random_id.suffix.hex}"
+resource "aws_s3_bucket_public_access_block" "logs" {
+  bucket                  = aws_s3_bucket.logs.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "logs_lifecycle" {
+  bucket     = aws_s3_bucket.logs.id
+  depends_on = [aws_s3_bucket_ownership_controls.logs]
+
+  rule {
+    id = "expire-ec2-logs-7d"
+    filter {
+      prefix = "ec2/logs/"
+    }
+    status = "Enabled"
+    expiration {
+      days = 7
+    }
+  }
+
+  rule {
+    id = "expire-app-logs-7d"
+    filter {
+      prefix = "app/logs/"
+    }
+    status = "Enabled"
+    expiration {
+      days = 7
+    }
+  }
+}
+
+# ALB logs bucket
+resource "aws_s3_bucket" "alb_logs" {
+  bucket = "${var.stage}-alb-logs-${random_id.rand_id.hex}"
+  tags = {
+    Name  = "${var.stage}-alb-logs-${random_id.rand_id.hex}"
+    Stage = var.stage
+  }
+}
+
+# ALB logs bucket ownership controls
+resource "aws_s3_bucket_ownership_controls" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
+# ALB logs bucket policy for Load Balancer delivery
+resource "aws_s3_bucket_policy" "alb_logs" {
+  bucket     = aws_s3_bucket.alb_logs.id
+  depends_on = [aws_s3_bucket_ownership_controls.alb_logs]
+
   policy = jsonencode({
     Version = "2012-10-17",
-    Statement = [{
-      Effect   = "Allow"
-      Action   = ["s3:*"]
-      Resource = ["${aws_s3_bucket.logs.arn}", "${aws_s3_bucket.logs.arn}/*"]
-    }]
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "logdelivery.elasticloadbalancing.amazonaws.com"
+        },
+        Action   = "s3:PutObject",
+        Resource = "${aws_s3_bucket.alb_logs.arn}/*"
+      },
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "logdelivery.elasticloadbalancing.amazonaws.com"
+        },
+        Action   = "s3:PutObject",
+        Resource = "${aws_s3_bucket.alb_logs.arn}/*"
+      }
+    ]
   })
-}
-
-resource "aws_iam_role_policy_attachment" "attach" {
-  role       = aws_iam_role.ec2_role.name
-  policy_arn = aws_iam_policy.s3_policy.arn
-}
-
-resource "aws_iam_instance_profile" "profile" {
-  name = "${var.stage}-profile-${random_id.suffix.hex}"
-  role = aws_iam_role.ec2_role.name
-}
-
-# -----------------------------
-# EC2 Instance (Free Tier t3.micro)
-# -----------------------------
-resource "aws_instance" "app" {
-  ami                         = var.ami_id
-  instance_type               = "t3.micro"
-  subnet_id                   = element(data.aws_subnets.default.ids, 0)
-  vpc_security_group_ids      = [aws_security_group.sg.id]
-  iam_instance_profile        = aws_iam_instance_profile.profile.name
-  key_name                    = var.key_name
-  associate_public_ip_address = true
-
-  user_data = <<-EOF
-              #!/bin/bash
-              apt-get update -y
-              apt-get install -y openjdk-21-jdk awscli
-              mkdir -p /home/ubuntu
-              cd /home/ubuntu
-              aws s3 cp s3://${var.s3_bucket_name}/app/techeazy.jar /home/ubuntu/app.jar || true
-              if [ -f /home/ubuntu/app.jar ]; then
-                nohup java -jar /home/ubuntu/app.jar --server.port=80 > /var/log/techeazy.log 2>&1 &
-              fi
-              EOF
-
-  tags = {
-    Name  = "${var.stage}-ec2-${random_id.suffix.hex}"
-    Stage = var.stage
-  }
-}
-
-# -----------------------------
-# Application Load Balancer
-# -----------------------------
-resource "aws_lb" "alb" {
-  name               = "${var.stage}-alb-${random_id.suffix.hex}"
-  load_balancer_type = "application"
-  subnets            = data.aws_subnets.default.ids
-  security_groups    = [aws_security_group.sg.id]
-  enable_deletion_protection = false
-
-  access_logs {
-    bucket  = aws_s3_bucket.logs.bucket
-    prefix  = "alb"
-    enabled = true
-  }
-
-  tags = {
-    Name  = "${var.stage}-alb"
-    Stage = var.stage
-  }
 }
 
 # -----------------------------
 # Target Group
 # -----------------------------
 resource "aws_lb_target_group" "tg" {
-  name     = "${var.stage}-tg-${random_id.suffix.hex}"
-  port     = 80
+  name     = "${var.stage}-tg"
+  port     = 8080
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.default.id
 
   health_check {
-    path                = "/hello"
-    port                = "80"
-    protocol            = "HTTP"
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-    interval            = 30
-    timeout             = 5
-  }
+  path                = "/hello"
+  port                = "8080"
+  protocol            = "HTTP"
+  healthy_threshold   = 2
+  unhealthy_threshold = 2
+  interval            = 30
+  timeout             = 5
+}
 
   tags = {
     Name  = "${var.stage}-tg"
-    Stage = var.stage
   }
 }
 
+
 # -----------------------------
-# Listener
+# ALB Listener
 # -----------------------------
 resource "aws_lb_listener" "http_listener" {
   load_balancer_arn = aws_lb.alb.arn
-  port              = 80
+  port              = 8080
   protocol          = "HTTP"
 
   default_action {
@@ -213,10 +221,142 @@ resource "aws_lb_listener" "http_listener" {
 }
 
 # -----------------------------
-# Attach EC2 to Target Group
+# Attach EC2 instances to Target Group
 # -----------------------------
-resource "aws_lb_target_group_attachment" "attach" {
+resource "aws_lb_target_group_attachment" "tg_attachment" {
+  count            = length(aws_instance.app)
   target_group_arn = aws_lb_target_group.tg.arn
-  target_id        = aws_instance.app.id
-  port             = 80
+  target_id        = aws_instance.app[count.index].id
+  port             = 8080
+}
+###############################################################################
+# EC2 Instances - app
+# Creates var.instance_count instances and attaches instance profile
+###############################################################################
+resource "aws_instance" "app" {
+  count                       = var.instance_count
+  ami                         = var.ami_id
+  instance_type               = var.instance_type
+  key_name                    = var.key_name
+  vpc_security_group_ids      = [aws_security_group.sg.id]
+  subnet_id                   = element(data.aws_subnets.default.ids, count.index % length(data.aws_subnets.default.ids))
+  iam_instance_profile        = aws_iam_instance_profile.uploader_profile.name
+  associate_public_ip_address = true
+
+  # Simple user_data: download jar from S3 (app/techeazy.jar) and run on port 8080
+  user_data = <<-EOF
+              #!/bin/bash
+              set -euo pipefail
+              apt-get update -y
+              apt-get install -y openjdk-21-jdk awscli
+              mkdir -p /home/ubuntu
+              cd /home/ubuntu
+              # try to download jar from S3 (will succeed if you've uploaded it)
+              aws s3 cp s3://${var.s3_bucket_name}/app/techeazy.jar /home/ubuntu/app.jar || true
+              # start app if present
+              if [ -f /home/ubuntu/app.jar ]; then
+                nohup java -jar /home/ubuntu/app.jar --server.port=80 > /var/log/techeazy.log 2>&1 &
+              fi
+              EOF
+
+  tags = {
+    Name  = "${var.stage}-ec2-${count.index}"
+    Stage = var.stage
+  }
+}
+
+
+# -----------------------------
+# IAM Roles
+# -----------------------------
+
+# Uploader Role
+resource "aws_iam_role" "s3_uploader_role" {
+  name = "${var.stage}-s3-uploader-role-${random_id.rand_id.hex}"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect    = "Allow",
+      Principal = { Service = "ec2.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_policy" "uploader_policy" {
+  name        = "${var.stage}-s3-uploader-policy-${random_id.rand_id.hex}"
+  description = "Policy for S3 uploader role"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect   = "Allow",
+      Action   = ["s3:PutObject", "s3:PutObjectAcl"],
+      Resource = ["${aws_s3_bucket.logs.arn}/*"]
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "uploader_attach" {
+  role       = aws_iam_role.s3_uploader_role.name
+  policy_arn = aws_iam_policy.uploader_policy.arn
+}
+
+resource "aws_iam_instance_profile" "uploader_profile" {
+  name = "${var.stage}-uploader-profile-${random_id.rand_id.hex}"
+  role = aws_iam_role.s3_uploader_role.name
+}
+
+# Read-only Role
+resource "aws_iam_role" "s3_read_role" {
+  name = "${var.stage}-s3-read-role-${random_id.rand_id.hex}"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect    = "Allow",
+      Principal = { Service = "ec2.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_policy" "read_policy" {
+  name        = "${var.stage}-s3-read-policy-${random_id.rand_id.hex}"
+  description = "Policy for S3 read-only access"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = ["s3:GetObject", "s3:ListBucket"],
+        Resource = [aws_s3_bucket.logs.arn, "${aws_s3_bucket.logs.arn}/*"]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "read_attach" {
+  role       = aws_iam_role.s3_read_role.name
+  policy_arn = aws_iam_policy.read_policy.arn
+}
+
+# -----------------------------
+# Application Load Balancer
+# -----------------------------
+resource "aws_lb" "alb" {
+  name               = "${var.stage}-alb-${random_id.rand_id.hex}"
+  load_balancer_type = "application"
+  subnets            = data.aws_subnets.default.ids
+  security_groups    = [aws_security_group.sg.id]
+
+  enable_deletion_protection = false
+
+  access_logs {
+    bucket  = aws_s3_bucket.alb_logs.bucket
+    prefix  = "alb"
+    enabled = true
+  }
+
+  depends_on = [aws_s3_bucket_policy.alb_logs]
 }
