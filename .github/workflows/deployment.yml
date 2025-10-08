@@ -1,4 +1,4 @@
-name: Terraform Deployment
+name: Terraform Deployment on AWS
 
 on:
   push:
@@ -28,7 +28,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.7.6
+          terraform_version: 1.13.3
 
       - name: Terraform Init
         run: terraform init
