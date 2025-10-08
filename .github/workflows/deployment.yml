@@ -28,6 +28,7 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
+        working-directory: Assignment-3
 
       - name: Terraform Format Check
         run: terraform fmt -check
@@ -42,6 +43,7 @@ jobs:
           -var="key_name=${{ secrets.EC2_KEY_NAME }}" \
           -var="s3_bucket_name=${{ secrets.S3_BUCKET_NAME }}" \
           -var="instance_count=${{ secrets.INSTANCE_COUNT }}"
+        working-directory: Assignment-3
 
       - name: Terraform Apply
         run: |
