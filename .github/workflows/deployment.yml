@@ -1,42 +1,57 @@
-name: 🚀 Deploy to AWS
+name: Terraform Deployment
 
 on:
-  workflow_dispatch:
-    inputs:
-      stage:
-        description: "Deployment stage"
-        required: true
-        default: "dev"
-
-env:
-  AWS_REGION: eu-north-1
+  push:
+    branches:
+      - main  # Trigger deployment when you push workflow changes to main
+  workflow_dispatch: # Manual trigger
 
 jobs:
-  deploy:
+  terraform-deploy:
+    name: Terraform Apply
     runs-on: ubuntu-latest
 
+    env:
+      AWS_REGION: eu-north-1
+
+    defaults:
+      run:
+        working-directory: Assignment-3  # Terraform folder path
+
     steps:
-      - name: 📦 Checkout Repository
+      - name: Checkout repo
         uses: actions/checkout@v4
-
-      - name: ⚙️ Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: 🔐 Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          fetch-depth: 0
+          ref: assignment-3   # Checkout the branch with Terraform code
 
-      - name: 🧱 Terraform Init
-        working-directory: Assignment-3/terraform
-        run: terraform init -input=false
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.7.6
 
-      - name: 🧮 Terraform Plan
-        working-directory: Assignment-3/terraform
-        run: terraform plan -var="stage=dev" -var="key_name=${{ vars.key_name }}"
+      - name: Terraform Init
+        run: terraform init
 
-      - name: 🚀 Terraform Apply
-        working-directory: Assignment-3/terraform
-        run: terraform apply -auto-approve -var="stage=dev" -var="key_name=${{ vars.key_name }}"
+      - name: Terraform Format Check
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: |
+          terraform plan \
+          -var="ami_id=${{ secrets.AMI_ID }}" \
+          -var="key_name=${{ secrets.EC2_KEY_NAME }}" \
+          -var="s3_bucket_name=${{ secrets.S3_BUCKET_NAME }}" \
+          -var="instance_count=${{ secrets.INSTANCE_COUNT }}"
+
+      - name: Terraform Apply
+        run: |
+          terraform apply -auto-approve \
+          -var="ami_id=${{ secrets.AMI_ID }}" \
+          -var="key_name=${{ secrets.EC2_KEY_NAME }}" \
+          -var="s3_bucket_name=${{ secrets.S3_BUCKET_NAME }}" \
+          -var="instance_count=${{ secrets.INSTANCE_COUNT }}"
+
