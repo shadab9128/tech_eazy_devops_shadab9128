@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: Assignment-3
+        working-directory: Assignment-3/terraform
 
     steps:
       - name: Checkout repo
@@ -28,7 +28,7 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: Assignment-3
+        working-directory: Assignment-3/terraform
 
       - name: Terraform Format Check
         run: terraform fmt -check
@@ -43,7 +43,7 @@ jobs:
           -var="key_name=${{ secrets.EC2_KEY_NAME }}" \
           -var="s3_bucket_name=${{ secrets.S3_BUCKET_NAME }}" \
           -var="instance_count=${{ secrets.INSTANCE_COUNT }}"
-        working-directory: Assignment-3
+        working-directory: Assignment-3/terraform
 
       - name: Terraform Apply
         run: |
@@ -52,4 +52,4 @@ jobs:
           -var="key_name=${{ secrets.EC2_KEY_NAME }}" \
           -var="s3_bucket_name=${{ secrets.S3_BUCKET_NAME }}" \
           -var="instance_count=${{ secrets.INSTANCE_COUNT }}"
-
+        working-directory: Assignment-3/terraform
