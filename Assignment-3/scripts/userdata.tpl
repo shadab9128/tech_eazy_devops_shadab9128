@@ -5,7 +5,7 @@ set -euo pipefail
 GITHUB_REPO="${github_repo}"
 BUCKET="${bucket_name}"
 APP_DIR="/home/ubuntu/app"
-JAR_KEY="app/techeazy.jar"   # S3 key where JAR will be uploaded manually
+JAR_KEY="app/techeazy.jar"
 LOCAL_JAR="${APP_DIR}/app.jar"
 POLL_SCRIPT="/usr/local/bin/poll_s3.sh"
 LOG_FILE="/home/ubuntu/techeazy.log"
@@ -13,21 +13,17 @@ LOG_FILE="/home/ubuntu/techeazy.log"
 apt-get update -y
 apt-get install -y openjdk-21-jdk awscli jq
 
-# create app dir
 mkdir -p ${APP_DIR}
 chown ubuntu:ubuntu ${APP_DIR}
 
-# copy helper scripts from S3? we will write poll script here
+# Write poll script
 cat > ${POLL_SCRIPT} <<'PSH'
 #!/bin/bash
-# Poll S3 for new JAR and restart app when changed.
 set -euo pipefail
-
 BUCKET="$1"
 KEY="$2"
 TARGET="$3"
 LOG="$4"
-
 LAST_ETAG_FILE="/var/tmp/jar-etag"
 
 while true; do
@@ -44,7 +40,6 @@ while true; do
     chmod 644 "$TARGET"
     echo "$etag" > "$LAST_ETAG_FILE"
 
-    # kill existing java process (if any)
     pid=$(pgrep -f "$TARGET" || true)
     if [ -n "$pid" ]; then
       echo "$(date -u) - killing pid $pid" >> "$LOG"
@@ -52,7 +47,6 @@ while true; do
       sleep 2
     fi
 
-    # start new jar
     nohup java -jar "$TARGET" --server.port=80 >> "$LOG" 2>&1 &
     echo "$(date -u) - restarted app" >> "$LOG"
   fi
@@ -63,7 +57,7 @@ PSH
 chmod +x ${POLL_SCRIPT}
 chown root:root ${POLL_SCRIPT}
 
-# create upload-logs.sh to upload logs on shutdown
+# Upload logs on shutdown
 cat > /usr/local/bin/upload-logs.sh <<'UL'
 #!/bin/bash
 set -euo pipefail
@@ -81,7 +75,6 @@ UL
 chmod +x /usr/local/bin/upload-logs.sh
 chown root:root /usr/local/bin/upload-logs.sh
 
-# systemd service to run upload on shutdown
 cat > /etc/systemd/system/upload-logs.service <<'US'
 [Unit]
 Description=Upload logs to S3 on shutdown
@@ -101,8 +94,4 @@ US
 systemctl daemon-reload
 systemctl enable upload-logs.service
 
-# start the poll script under ubuntu user
 sudo -u ubuntu nohup ${POLL_SCRIPT} "${BUCKET}" "${JAR_KEY}" "${LOCAL_JAR}" "${LOG_FILE}" > /var/log/poll_s3.log 2>&1 &
-
-# done
-
