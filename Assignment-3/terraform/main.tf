@@ -86,7 +86,7 @@ data "aws_subnets" "default" {
 
 # Logs bucket
 resource "aws_s3_bucket" "logs" {
-  bucket = var.s3_bucket_name
+  bucket = var.s3_bucket_name${random_id.rand_id.hex}
   tags = {
     Name  = var.s3_bucket_name
     Stage = var.stage
@@ -185,7 +185,7 @@ resource "aws_s3_bucket_policy" "alb_logs" {
 # Target Group
 # -----------------------------
 resource "aws_lb_target_group" "tg" {
-  name     = "${var.stage}-tg"
+  name     = "${var.stage}-tg-${random_id.rand_id.hex}"
   port     = 8080
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.default.id
