@@ -91,9 +91,6 @@ resource "aws_s3_bucket" "logs" {
     Name  = "${var.s3_bucket_name}-${random_id.rand_id.hex}"
     Stage = var.stage
   }
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 # Remove ACL resources and use bucket ownership controls
