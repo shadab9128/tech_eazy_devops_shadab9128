@@ -86,9 +86,9 @@ data "aws_subnets" "default" {
 
 # Logs bucket
 resource "aws_s3_bucket" "logs" {
-  bucket = var.s3_bucket_name${random_id.rand_id.hex}
+  bucket = var.s3_bucket_name-${random_id.rand_id.hex}
   tags = {
-    Name  = var.s3_bucket_name
+    Name  = var.s3_bucket_name-${random_id.rand_id.hex}
     Stage = var.stage
   }
 }
@@ -201,7 +201,7 @@ resource "aws_lb_target_group" "tg" {
 }
 
   tags = {
-    Name  = "${var.stage}-tg"
+    Name  = "${var.stage}-tg-${random_id.rand_id.hex}"
   }
 }
 
@@ -255,7 +255,7 @@ resource "aws_instance" "app" {
               aws s3 cp s3://${var.s3_bucket_name}/app/techeazy.jar /home/ubuntu/app.jar || true
               # start app if present
               if [ -f /home/ubuntu/app.jar ]; then
-                nohup java -jar /home/ubuntu/app.jar --server.port=80 > /var/log/techeazy.log 2>&1 &
+                nohup java -jar /home/ubuntu/app.jar --server.port=8080 > /var/log/techeazy.log 2>&1 &
               fi
               EOF
 
