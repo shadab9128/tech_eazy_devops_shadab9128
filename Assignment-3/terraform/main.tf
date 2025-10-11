@@ -86,9 +86,9 @@ data "aws_subnets" "default" {
 
 # Logs bucket
 resource "aws_s3_bucket" "logs" {
-  bucket = var.s3_bucket_name-${random_id.rand_id.hex}
+  bucket = "${var.s3_bucket_name}-${random_id.rand_id.hex}"
   tags = {
-    Name  = var.s3_bucket_name-${random_id.rand_id.hex}
+    Name  = "${var.s3_bucket_name}-${random_id.rand_id.hex}"
     Stage = var.stage
   }
   lifecycle {
