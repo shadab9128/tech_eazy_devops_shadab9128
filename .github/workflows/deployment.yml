@@ -1,9 +1,6 @@
 name: Terraform Deployment on AWS
 
 on:
-  push:
-    branches:
-      - main  # Trigger deployment when you push workflow changes to main
   workflow_dispatch: # Manual trigger
 
 jobs:
