@@ -14,31 +14,29 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
+          java-version: '17'   # matches your pom's <java.version>
           distribution: 'temurin'
+          cache: 'maven'
 
       - name: Build JAR
-        working-directory: ./src/main
-        run: mvn -B package
+        run: mvn -B -DskipTests package
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-north-1   # your region
+          aws-region: eu-north-1
 
       - name: Upload JAR to S3 Bucket
-        working-directory: ./src/main
         env:
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
         run: |
-            # Find the JAR file in the target directory
-            JAR_FILE=$(find target -name "*.jar" | head -n 1)
-            if [ -f "$JAR_FILE" ]; then
-                aws s3 cp "$JAR_FILE" s3://$S3_BUCKET_NAME/$JAR_FILE
-                echo "JAR file uploaded to s3://$S3_BUCKET_NAME/"
-            else
-                echo "No JAR file found in target directory"
-                exit 1
-            fi
+          JAR_FILE=$(find target -maxdepth 1 -type f -name "*.jar" ! -name "*sources*.jar" ! -name "*javadoc*.jar" | head -n 1)
+          if [ -f "$JAR_FILE" ]; then
+            aws s3 cp "$JAR_FILE" "s3://$S3_BUCKET_NAME/$(basename "$JAR_FILE")"
+            echo "Uploaded $(basename "$JAR_FILE") to s3://$S3_BUCKET_NAME/"
+          else
+            echo "No JAR file found in target"
+            exit 1
+          fi
