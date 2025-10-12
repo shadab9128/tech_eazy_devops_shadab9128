@@ -2,7 +2,7 @@ name: Build and Deploy JAR to S3
 
 on:
   workflow_dispatch:
-    
+
 jobs:
   build-and-upload-s3:
     runs-on: ubuntu-latest
@@ -19,7 +19,7 @@ jobs:
 
       - name: Build JAR
         working-directory: ./src/main
-        run: mvn -B package
+        run: mvn clean package
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
