@@ -1,0 +1,44 @@
+name: Build and Deploy JAR to S3
+
+on:
+  workflow_dispatch:
+    
+jobs:
+  build-and-upload-s3:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build JAR
+        working-directory: ./src/main
+        run: mvn -B package
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-north-1   # your region
+
+      - name: Upload JAR to S3 Bucket
+        working-directory: ./src/main
+        env:
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+        run: |
+            # Find the JAR file in the target directory
+            JAR_FILE=$(find target -name "*.jar" | head -n 1)
+            if [ -f "$JAR_FILE" ]; then
+                aws s3 cp "$JAR_FILE" s3://$S3_BUCKET_NAME/$JAR_FILE
+                echo "JAR file uploaded to s3://$S3_BUCKET_NAME/"
+            else
+                echo "No JAR file found in target directory"
+                exit 1
+            fi
