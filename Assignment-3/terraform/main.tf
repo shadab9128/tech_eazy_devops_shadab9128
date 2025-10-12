@@ -253,19 +253,19 @@ resource "aws_instance" "app" {
   iam_instance_profile        = aws_iam_instance_profile.uploader_profile.name
   associate_public_ip_address = true
 
-  # Simple user_data: download jar from S3 (app/techeazy.jar) and run on port 8080
+  # Simple user_data: download jar from S3 and run on port 8080
   user_data = <<-EOF
               #!/bin/bash
               set -euo pipefail
               apt-get update -y
               apt-get install -y openjdk-21-jdk awscli
-              mkdir -p /home/ubuntu
-              cd /home/ubuntu
+              mkdir -p /home/ubuntu/app
+              cd /home/ubuntu/app
               # try to download jar from S3 (will succeed if you've uploaded it)
-              aws s3 cp s3://${var.s3_bucket_name}/app/techeazy.jar /home/ubuntu/app.jar || true
+              aws s3 cp s3://techeazy-logs-devops/app/hellomvc-0.0.1-SNAPSHOT.jar /home/ubuntu/app/app.jar || true
               # start app if present
-              if [ -f /home/ubuntu/app.jar ]; then
-                nohup java -jar /home/ubuntu/app.jar --server.port=8080 > /var/log/techeazy.log 2>&1 &
+              if [ -f /home/ubuntu/app/app.jar ]; then
+                nohup java -jar /home/ubuntu/app/app.jar --server.port=8080 > /home/ubuntu/app/techeazy.log 2>&1 &
               fi
               EOF
 
