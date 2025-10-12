@@ -44,7 +44,7 @@ while true; do
 
     # Restart application
     log "Starting updated app..."
-    nohup java -jar "$TARGET" --server.port=80 >> "$LOG" 2>&1 &
+    nohup java -jar "$TARGET" --server.port=8080 >> "$LOG" 2>&1 &
     log "App restarted successfully with new JAR version."
   fi
 
