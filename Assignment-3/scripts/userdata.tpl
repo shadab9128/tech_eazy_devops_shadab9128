@@ -47,7 +47,7 @@ while true; do
       sleep 2
     fi
 
-    nohup java -jar "$TARGET" --server.port=80 >> "$LOG" 2>&1 &
+    nohup java -jar "$TARGET" --server.port=8080 >> "$LOG" 2>&1 &
     echo "$(date -u) - restarted app" >> "$LOG"
   fi
   sleep 15
