@@ -5,10 +5,10 @@ set -euo pipefail
 GITHUB_REPO="${github_repo}"
 BUCKET="${bucket_name}"
 APP_DIR="/home/ubuntu/app"
-JAR_KEY="app/techeazy.jar"
+JAR_KEY="app/app.jar"
 LOCAL_JAR="${APP_DIR}/app.jar"
 POLL_SCRIPT="/usr/local/bin/poll_s3.sh"
-LOG_FILE="/home/ubuntu/techeazy.log"
+LOG_FILE="/home/ubuntu/app/techeazy.log"
 
 apt-get update -y
 apt-get install -y openjdk-21-jdk awscli jq
