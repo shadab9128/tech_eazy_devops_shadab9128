@@ -34,8 +34,8 @@ jobs:
         run: |
           JAR_FILE=$(find target -maxdepth 1 -type f -name "*.jar" ! -name "*sources*.jar" ! -name "*javadoc*.jar" | head -n 1)
           if [ -f "$JAR_FILE" ]; then
-            aws s3 cp "$JAR_FILE" "s3://$S3_BUCKET_NAME/$(basename "$JAR_FILE")"
-            echo "Uploaded $(basename "$JAR_FILE") to s3://$S3_BUCKET_NAME/"
+            aws s3 cp "$JAR_FILE" "s3://$S3_BUCKET_NAME/app/$(basename "$JAR_FILE")"
+            echo "Uploaded $(basename "$JAR_FILE") to s3://$S3_BUCKET_NAME/app"
           else
             echo "No JAR file found in target"
             exit 1
