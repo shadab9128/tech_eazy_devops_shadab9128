@@ -9,7 +9,10 @@ terraform {
       version = "~> 3.5"
     }
   }
+
+    
 }
+#use_lockfile = true
 
 provider "aws" {
   region = var.region
