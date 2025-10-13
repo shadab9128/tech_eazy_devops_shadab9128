@@ -36,4 +36,22 @@ variable "s3_bucket_name" {
   description = "S3 bucket name for logs"
   type        = string
 }
+variable "existing_bucket_name" {
+  description = "Existing S3 bucket name that stores the JAR"
+  type        = string
+  default     = "techeazy-logs-devops"
+}
+
+variable "existing_jar_key" {
+  description = "S3 key/path for the JAR file (e.g. app/hellomvc-0.0.1-SNAPSHOT.jar)"
+  type        = string
+  default     = "app/hellomvc-0.0.1-SNAPSHOT.jar"
+}
+variable "instance_count" {
+  description = "Number of EC2 instances to launch"
+  type        = number
+  default     = 2
+  
+}
+
 
