@@ -13,6 +13,7 @@ variable "region" {
 variable "ami_id" {
   description = "AMI ID to use for EC2"
   type        = string
+  default     = "ami-0a716d3f3b16d290c"
 }
 
 variable "instance_type" {
@@ -24,6 +25,7 @@ variable "instance_type" {
 variable "key_name" {
   description = "AWS key pair name for SSH access"
   type        = string
+  default     = "wisecow"
 }
 
 variable "github_repo" {
