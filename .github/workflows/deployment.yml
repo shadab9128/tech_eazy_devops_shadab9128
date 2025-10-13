@@ -53,7 +53,7 @@ jobs:
             -var="region=${{ secrets.AWS_REGION }}" \
             -var="stage=${{ secrets.STAGE }}" \
             -var="ami_id=${{ secrets.AMI_ID }}" \
-            -var="instance_type=${{ secrets.INSTANCE_TYPE }}"
+            -var="instance_type=${{ secrets.INSTANCE_TYPE }}" \
             -var="key_name=${{ secrets.EC2_KEY_NAME }}" \
             -var="existing_bucket_name=${{ secrets.EXISTING_BUCKET_NAME }}" \
             -var="github_repo=${{ secrets.REPO_GITHUB }}"
