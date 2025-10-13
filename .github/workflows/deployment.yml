@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: Assignment-3/terraform
+        working-directory: Assignment-3/terraform  # Consistent working directory for all steps
 
     steps:
       - name: Checkout repo
@@ -21,7 +21,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.13.3
+          terraform_version: 1.5.7  # Updated to a recent version
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -30,31 +30,36 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-
       - name: Terraform Init
         run: terraform init
-        working-directory: Assignment-3/terraform
 
-          # - name: Terraform Format Check
-          #run: terraform fmt -check
+      - name: Terraform Format Check
+        run: terraform fmt -check
 
       - name: Terraform Validate
-        run: terraform validate
+        run: terraform validate  # Should pass with previous fixes
 
       - name: Terraform Plan
         run: |
           terraform plan \
-          -var="ami_id=${{ secrets.AMI_ID }}" \
-          -var="key_name=${{ secrets.EC2_KEY_NAME }}" \
-          -var="s3_bucket_name=${{ secrets.S3_BUCKET_NAME }}" \
-          -var="instance_count=${{ secrets.INSTANCE_COUNT }}"
-        working-directory: Assignment-3/terraform
+            -var="region=${{ secrets.AWS_REGION }}" \  # Override if needed; else uses variables.tf default
+            -var="stage=${{ secrets.STAGE }}" \  # Override if needed
+            -var="ami_id=${{ secrets.AMI_ID }}" \
+            -var="instance_type=${{ secrets.INSTANCE_TYPE }}" \  # Override if needed
+            -var="key_name=${{ secrets.EC2_KEY_NAME }}" \
+            -var="existing_bucket_name=${{ secrets.EXISTING_BUCKET_NAME }}" \
+            -var="github_repo=${{ secrets.REPO_GITHUB }}"  # Override if needed
 
       - name: Terraform Apply
         run: |
           terraform apply -auto-approve \
-          -var="ami_id=${{ secrets.AMI_ID }}" \
-          -var="key_name=${{ secrets.EC2_KEY_NAME }}" \
-          -var="s3_bucket_name=${{ secrets.S3_BUCKET_NAME }}" \
-          -var="instance_count=${{ secrets.INSTANCE_COUNT }}"
-        working-directory: Assignment-3/terraform
+            -var="region=${{ secrets.AWS_REGION }}" \  # Override if needed
+            -var="stage=${{ secrets.STAGE }}" \  # Override if needed
+            -var="ami_id=${{ secrets.AMI_ID }}" \
+            -var="instance_type=${{ secrets.INSTANCE_TYPE }}" \  # Override if needed
+            -var="key_name=${{ secrets.EC2_KEY_NAME }}" \
+            -var="existing_bucket_name=${{ secrets.EXISTING_BUCKET_NAME }}" \
+            -var="github_repo=${{ secrets.REPO_GITHUB }}"  # Override if needed
+
+      - name: Show Terraform Outputs
+        run: terraform output  # Displays outputs for debugging
