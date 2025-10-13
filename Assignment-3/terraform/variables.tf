@@ -35,6 +35,7 @@ variable "github_repo" {
 variable "s3_bucket_name" {
   description = "S3 bucket name for logs"
   type        = string
+  default     = "techeazy-logs-devops"
 }
 variable "existing_bucket_name" {
   description = "Existing S3 bucket name that stores the JAR"
