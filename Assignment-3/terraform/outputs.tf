@@ -1,19 +1,25 @@
-output "alb_dns" {
-  description = "Public ALB DNS"
+# outputs.tf
+
+# Output the ALB DNS name (useful for accessing the app on ports 80/8080)
+output "alb_dns_name" {
   value       = aws_lb.alb.dns_name
+  description = "DNS name of the Application Load Balancer"
 }
 
-output "s3_bucket" {
-  description = "S3 bucket for logs and jars"
-  value       = aws_s3_bucket.logs.bucket
+# Output the target group ARN (for reference)
+output "target_group_arn" {
+  value       = aws_lb_target_group.tg.arn
+  description = "ARN of the ALB target group"
 }
 
-output "alb_logs_bucket" {
-  description = "S3 bucket for ALB access logs"
-  value       = aws_s3_bucket.alb_logs.bucket
+# Output the existing S3 bucket name (since it's not managed by Terraform, we just echo the variable)
+output "existing_s3_bucket" {
+  value       = var.existing_bucket_name
+  description = "Name of the existing S3 bucket for JAR and logs"
 }
 
-#output "asg_name" {
-# description = "AutoScaling Group name"
-#value       = aws_autoscaling_group.asg.name
-#}
+# Output EC2 instance IDs (if using multiple instances)
+output "ec2_instance_ids" {
+  value       = aws_instance.app[*].id
+  description = "IDs of the EC2 instances"
+}
