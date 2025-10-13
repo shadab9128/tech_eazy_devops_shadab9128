@@ -1,11 +1,7 @@
-variable "instance_type" {
-  type    = string
-  default = "t3.micro"
-}
-
-variable "key_name" {
-  description = "EC2 key pair name (must exist in AWS)"
+variable "stage" {
+  description = "Deployment stage: Dev or Prod"
   type        = string
+  default     = "Dev"
 }
 
 variable "region" {
@@ -14,36 +10,48 @@ variable "region" {
   default     = "eu-north-1"
 }
 
-variable "stage" {
-  description = "Stage name (dev/prod)"
-  type        = string
-  default     = "dev"
-}
-
-variable "s3_bucket_name" {
-  description = "Name of the S3 bucket for logs"
+variable "ami_id" {
+  description = "AMI ID to use for EC2"
   type        = string
 }
 
-variable "instance_count" {
-  description = "Number of EC2 instances to launch"
-  type        = number
-  default     = 2
+variable "instance_type" {
+  description = "EC2 instance type"
+  type        = string
+  default     = "t3.micro"
+}
+
+variable "key_name" {
+  description = "AWS key pair name for SSH access"
+  type        = string
 }
 
 variable "github_repo" {
-  description = "GitHub repo to clone app from"
+  description = "GitHub repo to clone"
   type        = string
   default     = "https://github.com/Trainings-TechEazy/test-repo-for-devops"
 }
 
-variable "vpc_id" {
-  description = "VPC ID for the Load Balancer and Target Group"
+variable "s3_bucket_name" {
+  description = "S3 bucket name for logs"
   type        = string
-  default     = ""
+}
+variable "existing_bucket_name" {
+  description = "Existing S3 bucket name that stores the JAR"
+  type        = string
+  default     = "techeazy-logs-devops"
 }
 
-variable "ami_id" {
-  description = "AMI ID for EC2 instances"
+variable "existing_jar_key" {
+  description = "S3 key/path for the JAR file (e.g. app/hellomvc-0.0.1-SNAPSHOT.jar)"
   type        = string
+  default     = "app/hellomvc-0.0.1-SNAPSHOT.jar"
 }
+variable "instance_count" {
+  description = "Number of EC2 instances to launch"
+  type        = number
+  default     = 2
+  
+}
+
+

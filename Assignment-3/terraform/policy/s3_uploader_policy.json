@@ -5,8 +5,7 @@
       "Sid": "PutObjects",
       "Effect": "Allow",
       "Action": ["s3:PutObject", "s3:PutObjectAcl"],
-      "Resource": "arn:aws:s3:::techeazy-logs-devops/*"
+      "Resource": "arn:aws:s3:::EXISTING_BUCKET_NAME/*"
     }
   ]
 }
-

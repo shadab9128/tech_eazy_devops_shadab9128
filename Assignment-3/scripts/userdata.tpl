@@ -1,80 +1,55 @@
 #!/bin/bash
 set -euo pipefail
 
-# variables injected by Terraform
+# Variables injected by Terraform
 GITHUB_REPO="${github_repo}"
-BUCKET="${bucket_name}"
+BUCKET="${existing_bucket_name}"  # Standardized
 APP_DIR="/home/ubuntu/app"
-JAR_KEY="app/app.jar"
-LOCAL_JAR="${APP_DIR}/app.jar"
-POLL_SCRIPT="/usr/local/bin/poll_s3.sh"
-LOG_FILE="/home/ubuntu/app/techeazy.log"
+JAR_KEY="app/hellomvc-0.0.1-SNAPSHOT.jar"
+LOCAL_JAR="$APP_DIR/hellomvc-0.0.1-SNAPSHOT.jar"
+LOG_FILE="$APP_DIR/techeazy.log"
+LAST_ETAG_FILE="/var/tmp/jar-etag"
 
 apt-get update -y
 apt-get install -y openjdk-21-jdk awscli jq
 
-mkdir -p ${APP_DIR}
-chown ubuntu:ubuntu ${APP_DIR}
+mkdir -p $APP_DIR
+chown ubuntu:ubuntu $APP_DIR
+touch $LOG_FILE
+chown ubuntu:ubuntu $LOG_FILE
 
-# Write poll script
-cat > ${POLL_SCRIPT} <<'PSH'
-#!/bin/bash
-set -euo pipefail
-BUCKET="$1"
-KEY="$2"
-TARGET="$3"
-LOG="$4"
-LAST_ETAG_FILE="/var/tmp/jar-etag"
-
+# Poll and restart logic
 while true; do
-  etag=$(aws s3api head-object --bucket "$BUCKET" --key "$KEY" --query ETag --output text 2>/dev/null || echo "")
+  etag=$(aws s3api head-object --bucket "$BUCKET" --key "$JAR_KEY" --query ETag --output text 2>/dev/null || echo "")
   if [ -z "$etag" ]; then
-    echo "$(date -u) - no jar present yet" >> "$LOG"
+    echo "$(date -u '+%Y-%m-%dT%H:%M:%SZ') - No JAR present yet at s3://$BUCKET/$JAR_KEY" >> "$LOG_FILE"
     sleep 30
     continue
   fi
 
-  if [ ! -f "$LAST_ETAG_FILE" ] || [ "$(cat $LAST_ETAG_FILE)" != "$etag" ]; then
-    echo "$(date -u) - new jar detected: $etag" >> "$LOG"
-    aws s3 cp "s3://$BUCKET/$KEY" "$TARGET"
-    chmod 644 "$TARGET"
+  if [ ! -f "$LAST_ETAG_FILE" ] || [ "$(cat "$LAST_ETAG_FILE")" != "$etag" ]; then
+    echo "$(date -u '+%Y-%m-%dT%H:%M:%SZ') - New JAR detected: $etag — Downloading..." >> "$LOG_FILE"
+    aws s3 cp "s3://$BUCKET/$JAR_KEY" "$LOCAL_JAR" --quiet
+    chmod 644 "$LOCAL_JAR"
     echo "$etag" > "$LAST_ETAG_FILE"
 
-    pid=$(pgrep -f "$TARGET" || true)
-    if [ -n "$pid" ]; then
-      echo "$(date -u) - killing pid $pid" >> "$LOG"
-      kill $pid || true
+    pids=$(pgrep -f "$LOCAL_JAR" || true)
+    if [ -n "$pids" ]; then
+      echo "$(date -u '+%Y-%m-%dT%H:%M:%SZ') - Stopping old Java processes: $pids" >> "$LOG_FILE"
+      for pid in $pids; do
+        kill -9 "$pid" || true
+      done
       sleep 2
     fi
 
-    nohup java -jar "$TARGET" --server.port=8080 >> "$LOG" 2>&1 &
-    echo "$(date -u) - restarted app" >> "$LOG"
+    echo "$(date -u '+%Y-%m-%dT%H:%M:%SZ') - Starting updated app..." >> "$LOG_FILE"
+    nohup java -jar "$LOCAL_JAR" --server.port=8080 >> "$LOG_FILE" 2>&1 &
+    echo "$(date -u '+%Y-%m-%dT%H:%M:%SZ') - App restarted successfully." >> "$LOG_FILE"
   fi
   sleep 15
-done
-PSH
-
-chmod +x ${POLL_SCRIPT}
-chown root:root ${POLL_SCRIPT}
+done &
 
 # Upload logs on shutdown
-cat > /usr/local/bin/upload-logs.sh <<'UL'
-#!/bin/bash
-set -euo pipefail
-TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)
-BUCKET="${bucket_name}"
-if [ -f /var/log/cloud-init.log ]; then
-  aws s3 cp /var/log/cloud-init.log s3://$BUCKET/ec2/logs/cloud-init.$TIMESTAMP.log
-fi
-if [ -f /home/ubuntu/techeazy.log ]; then
-  aws s3 cp /home/ubuntu/techeazy.log s3://$BUCKET/app/logs/techeazy.$TIMESTAMP.log || true
-fi
-exit 0
-UL
-
-chmod +x /usr/local/bin/upload-logs.sh
-chown root:root /usr/local/bin/upload-logs.sh
-
 cat > /etc/systemd/system/upload-logs.service <<'US'
 [Unit]
 Description=Upload logs to S3 on shutdown
@@ -84,7 +59,7 @@ Before=shutdown.target
 [Service]
 Type=oneshot
 ExecStart=/bin/true
-ExecStop=/usr/local/bin/upload-logs.sh
+ExecStop=/bin/bash -c 'TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ); BUCKET="${existing_bucket_name}"; [ -f /var/log/cloud-init.log ] && aws s3 cp /var/log/cloud-init.log s3://$BUCKET/ec2/logs/cloud-init.$TIMESTAMP.log; [ -f /home/ubuntu/app/techeazy.log ] && aws s3 cp /home/ubuntu/app/techeazy.log s3://$BUCKET/app/logs/techeazy.$TIMESTAMP.log'
 RemainAfterExit=yes
 
 [Install]
@@ -93,5 +68,3 @@ US
 
 systemctl daemon-reload
 systemctl enable upload-logs.service
-
-sudo -u ubuntu nohup ${POLL_SCRIPT} "${BUCKET}" "${JAR_KEY}" "${LOCAL_JAR}" "${LOG_FILE}" > /var/log/poll_s3.log 2>&1 &

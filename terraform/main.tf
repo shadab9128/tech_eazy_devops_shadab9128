@@ -239,31 +239,23 @@ resource "aws_iam_instance_profile" "s3_read_profile" {
 # EC2 Instances - Application
 # -----------------------------
 resource "aws_instance" "app" {
-  count                       = var.instance_count
-  ami                         = var.ami_id
-  instance_type               = var.instance_type
-  key_name                    = var.key_name
-  vpc_security_group_ids      = [aws_security_group.sg.id]
-  subnet_id                   = element(data.aws_subnets.default.ids, count.index % length(data.aws_subnets.default.ids))
-  iam_instance_profile        = aws_iam_instance_profile.s3_read_profile.name
+  ami                    = var.ami_id
+  instance_type          = var.instance_type
+  key_name               = var.key_name
+  vpc_security_group_ids = [aws_security_group.sg.id]
+  iam_instance_profile   = aws_iam_instance_profile.uploader_profile.name
   associate_public_ip_address = true
 
-  user_data = <<-EOF
-              #!/bin/bash
-              set -euo pipefail
-              apt-get update -y
-              apt-get install -y openjdk-21-jdk awscli
-              mkdir -p /home/ubuntu/app
-              cd /home/ubuntu/app
-              aws s3 cp s3://${var.existing_bucket_name}/${var.existing_jar_key} app.jar
-              nohup java -jar app.jar --server.port=8080 > /home/ubuntu/app/app.log 2>&1 &
-              EOF
-
   tags = {
-    Name  = "${var.stage}-ec2-${count.index}"
-    Stage = var.stage
+    Name = "${var.stage}-ec2"
   }
+
+  user_data = templatefile("${path.module}/../scripts/userdata.tpl", {
+    github_repo   = var.github_repo
+    bucket_name   = var.s3_bucket_name
+  })
 }
+
 
 # -----------------------------
 # Attach EC2 to Target Group
