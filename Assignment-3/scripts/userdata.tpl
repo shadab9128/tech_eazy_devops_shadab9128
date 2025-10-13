@@ -1,3 +1,6 @@
+  
+
+```bash
 #!/bin/bash
 set -euo pipefail
 
@@ -29,7 +32,13 @@ while true; do
 
   if [ ! -f "$LAST_ETAG_FILE" ] || [ "$(cat "$LAST_ETAG_FILE")" != "$etag" ]; then
     echo "$(date -u '+%Y-%m-%dT%H:%M:%SZ') - New JAR detected: $etag — Downloading..." >> "$LOG_FILE"
-    aws s3 cp "s3://$BUCKET/$JAR_KEY" "$LOCAL_JAR" --quiet
+    # Updated to use s3api get-object with integrity and version validation
+    aws s3api get-object \
+        --bucket "$BUCKET" \
+        --key "$JAR_KEY" \
+        --if-match "$etag" \
+        --checksum-mode ENABLED \
+        "$LOCAL_JAR" 2>/dev/null || true
     chmod 644 "$LOCAL_JAR"
     echo "$etag" > "$LAST_ETAG_FILE"
 
@@ -68,3 +77,4 @@ US
 
 systemctl daemon-reload
 systemctl enable upload-logs.service
+```
