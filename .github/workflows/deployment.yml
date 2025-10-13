@@ -39,24 +39,24 @@ jobs:
       - name: Terraform Plan
         run: |
           terraform plan \
-            -var="region=${{ secrets.AWS_REGION }}" \  # Override if needed; else uses variables.tf default
-            -var="stage=${{ secrets.STAGE }}" \  # Override if needed
+            -var="region=${{ secrets.AWS_REGION }}" \
+            -var="stage=${{ secrets.STAGE }}" \
             -var="ami_id=${{ secrets.AMI_ID }}" \
-            -var="instance_type=${{ secrets.INSTANCE_TYPE }}" \  # Override if needed
+            -var="instance_type=${{ secrets.INSTANCE_TYPE }}" \
             -var="key_name=${{ secrets.EC2_KEY_NAME }}" \
             -var="existing_bucket_name=${{ secrets.EXISTING_BUCKET_NAME }}" \
-            -var="github_repo=${{ secrets.REPO_GITHUB }}"  # Override if needed
+            -var="github_repo=${{ secrets.REPO_GITHUB }}"
 
       - name: Terraform Apply
         run: |
           terraform apply -auto-approve \
-            -var="region=${{ secrets.AWS_REGION }}" \  # Override if needed
-            -var="stage=${{ secrets.STAGE }}" \  # Override if needed
+            -var="region=${{ secrets.AWS_REGION }}" \
+            -var="stage=${{ secrets.STAGE }}" \
             -var="ami_id=${{ secrets.AMI_ID }}" \
-            -var="instance_type=${{ secrets.INSTANCE_TYPE }}" \  # Override if needed
+            -var="instance_type=${{ secrets.INSTANCE_TYPE }}"
             -var="key_name=${{ secrets.EC2_KEY_NAME }}" \
             -var="existing_bucket_name=${{ secrets.EXISTING_BUCKET_NAME }}" \
-            -var="github_repo=${{ secrets.REPO_GITHUB }}"  # Override if needed
+            -var="github_repo=${{ secrets.REPO_GITHUB }}"
 
       - name: Show Terraform Outputs
         run: terraform output  # Displays outputs for debugging
