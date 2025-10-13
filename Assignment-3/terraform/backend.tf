@@ -4,7 +4,6 @@ terraform {
     key            = "assignment-3/terraform.tfstate"
     region         = "eu-north-1"
     encrypt        = true
-    use_lockfile  = true
   }
 }
 
