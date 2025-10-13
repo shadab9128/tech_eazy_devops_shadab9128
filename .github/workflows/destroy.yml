@@ -40,8 +40,11 @@ jobs:
       - name: Terraform Destroy
         run: |
           terraform destroy -auto-approve \
-          -var="ami_id=${{ secrets.AMI_ID }}" \
-          -var="key_name=${{ secrets.EC2_KEY_NAME }}" \
-          -var="s3_bucket_name=${{ secrets.S3_BUCKET_NAME }}" \
-          -var="instance_count=${{ secrets.INSTANCE_COUNT }}"
+            -var="region=${{ secrets.AWS_REGION }}" \  # Override if needed
+            -var="stage=${{ secrets.STAGE }}" \  # Override if needed
+            -var="ami_id=${{ secrets.AMI_ID }}" \
+            -var="instance_type=${{ secrets.INSTANCE_TYPE }}" \  # Override if needed
+            -var="key_name=${{ secrets.EC2_KEY_NAME }}" \
+            -var="existing_bucket_name=${{ secrets.EXISTING_BUCKET_NAME }}" \
+            -var="github_repo=${{ secrets.REPO_GITHUB }}"  # Override if needed
 
