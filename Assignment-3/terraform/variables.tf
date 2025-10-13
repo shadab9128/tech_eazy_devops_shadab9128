@@ -31,7 +31,7 @@ variable "key_name" {
 variable "github_repo" {
   description = "GitHub repo to clone"
   type        = string
-  default     = "https://github.com/Trainings-TechEazy/test-repo-for-devops"
+  default     = "https://github.com/shadab9128/tech_eazy_devops_shadab9128"
 }
 
 variable "s3_bucket_name" {
