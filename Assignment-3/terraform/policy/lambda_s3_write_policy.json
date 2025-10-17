@@ -2,9 +2,12 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "PutObjects",
+      "Sid": "AllowS3Write",
       "Effect": "Allow",
-      "Action": ["s3:PutObject", "s3:PutObjectAcl"],
+      "Action": [
+        "s3:PutObject",
+        "s3:PutObjectAcl"
+      ],
       "Resource": "arn:aws:s3:::EXISTING_BUCKET_NAME/*"
     }
   ]

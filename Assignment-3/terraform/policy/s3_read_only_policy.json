@@ -10,7 +10,7 @@
     {
       "Sid": "GetObjects",
       "Effect": "Allow",
-      "Action": ["s3:GetObject"],
+      "Action": ["s3:GetObject", "s3:HeadObject"],
       "Resource": "arn:aws:s3:::EXISTING_BUCKET_NAME/*"
     }
   ]
