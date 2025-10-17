@@ -191,130 +191,130 @@ resource "aws_autoscaling_group" "app_asg" {
   }
 }
 
-# -----------------------------
-# SNS Topic for ASG lifecycle notifications
-# -----------------------------
-resource "aws_sns_topic" "asg_notifications" {
-  name = "${var.stage}-asg-notifications-${random_id.rand_id.hex}"
-}
+# # -----------------------------
+# # SNS Topic for ASG lifecycle notifications
+# # -----------------------------
+# resource "aws_sns_topic" "asg_notifications" {
+#   name = "${var.stage}-asg-notifications-${random_id.rand_id.hex}"
+# }
 
-# -----------------------------
-# IAM Role for ASG lifecycle hooks
-# -----------------------------
-resource "aws_iam_role" "asg_lifecycle_role" {
-  name = "${var.stage}-asg-lc-role-${random_id.rand_id.hex}"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Action = "sts:AssumeRole",
-      Effect = "Allow",
-      Principal = { Service = "autoscaling.amazonaws.com" }
-    }]
-  })
-}
+# # -----------------------------
+# # IAM Role for ASG lifecycle hooks
+# # -----------------------------
+# resource "aws_iam_role" "asg_lifecycle_role" {
+#   name = "${var.stage}-asg-lc-role-${random_id.rand_id.hex}"
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [{
+#       Action = "sts:AssumeRole",
+#       Effect = "Allow",
+#       Principal = { Service = "autoscaling.amazonaws.com" }
+#     }]
+#   })
+# }
 
-resource "aws_iam_role_policy" "asg_lc_policy" {
-  name = "${var.stage}-asg-lc-policy-${random_id.rand_id.hex}"
-  role = aws_iam_role.asg_lifecycle_role.id
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Effect = "Allow",
-      Action = ["sns:Publish"],
-      Resource = aws_sns_topic.asg_notifications.arn
-    }]
-  })
-}
+# resource "aws_iam_role_policy" "asg_lc_policy" {
+#   name = "${var.stage}-asg-lc-policy-${random_id.rand_id.hex}"
+#   role = aws_iam_role.asg_lifecycle_role.id
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [{
+#       Effect = "Allow",
+#       Action = ["sns:Publish"],
+#       Resource = aws_sns_topic.asg_notifications.arn
+#     }]
+#   })
+# }
 
-# -----------------------------
-# Lifecycle Hooks (Launch/Terminate)
-# -----------------------------
-resource "aws_autoscaling_lifecycle_hook" "launch_hook" {
-  name                   = "${var.stage}-launch-hook"
-  autoscaling_group_name = aws_autoscaling_group.app_asg.name
-  lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
-  default_result         = "CONTINUE"
-  notification_target_arn = aws_sns_topic.asg_notifications.arn
-  heartbeat_timeout      = 300
-  role_arn               = aws_iam_role.asg_lifecycle_role.arn
-}
+# # -----------------------------
+# # Lifecycle Hooks (Launch/Terminate)
+# # -----------------------------
+# resource "aws_autoscaling_lifecycle_hook" "launch_hook" {
+#   name                   = "${var.stage}-launch-hook"
+#   autoscaling_group_name = aws_autoscaling_group.app_asg.name
+#   lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
+#   default_result         = "CONTINUE"
+#   notification_target_arn = aws_sns_topic.asg_notifications.arn
+#   heartbeat_timeout      = 300
+#   role_arn               = aws_iam_role.asg_lifecycle_role.arn
+# }
 
-resource "aws_autoscaling_lifecycle_hook" "terminate_hook" {
-  name                   = "${var.stage}-terminate-hook"
-  autoscaling_group_name = aws_autoscaling_group.app_asg.name
-  lifecycle_transition   = "autoscaling:EC2_INSTANCE_TERMINATING"
-  default_result         = "CONTINUE"
-  notification_target_arn = aws_sns_topic.asg_notifications.arn
-  heartbeat_timeout      = 300
-  role_arn               = aws_iam_role.asg_lifecycle_role.arn
-}
+# resource "aws_autoscaling_lifecycle_hook" "terminate_hook" {
+#   name                   = "${var.stage}-terminate-hook"
+#   autoscaling_group_name = aws_autoscaling_group.app_asg.name
+#   lifecycle_transition   = "autoscaling:EC2_INSTANCE_TERMINATING"
+#   default_result         = "CONTINUE"
+#   notification_target_arn = aws_sns_topic.asg_notifications.arn
+#   heartbeat_timeout      = 300
+#   role_arn               = aws_iam_role.asg_lifecycle_role.arn
+# }
 
-# -----------------------------
-# Lambda for logging ASG events to S3
-# -----------------------------
-resource "aws_iam_role" "lambda_role" {
-  name = "${var.stage}-lambda-role-${random_id.rand_id.hex}"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Action = "sts:AssumeRole",
-      Effect = "Allow",
-      Principal = { Service = "lambda.amazonaws.com" }
-    }]
-  })
-}
+# # -----------------------------
+# # Lambda for logging ASG events to S3
+# # -----------------------------
+# resource "aws_iam_role" "lambda_role" {
+#   name = "${var.stage}-lambda-role-${random_id.rand_id.hex}"
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [{
+#       Action = "sts:AssumeRole",
+#       Effect = "Allow",
+#       Principal = { Service = "lambda.amazonaws.com" }
+#     }]
+#   })
+# }
 
-resource "aws_iam_policy" "lambda_s3_policy" {
-  name   = "${var.stage}-lambda-s3-policy-${random_id.rand_id.hex}"
-  policy = replace(file("${path.module}/policy/lambda_s3_write_policy.json"), "EXISTING_BUCKET_NAME", var.existing_bucket_name)
-}
+# resource "aws_iam_policy" "lambda_s3_policy" {
+#   name   = "${var.stage}-lambda-s3-policy-${random_id.rand_id.hex}"
+#   policy = replace(file("${path.module}/policy/lambda_s3_write_policy.json"), "EXISTING_BUCKET_NAME", var.existing_bucket_name)
+# }
 
-resource "aws_iam_role_policy_attachment" "lambda_attach_s3" {
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.lambda_s3_policy.arn
-}
+# resource "aws_iam_role_policy_attachment" "lambda_attach_s3" {
+#   role       = aws_iam_role.lambda_role.name
+#   policy_arn = aws_iam_policy.lambda_s3_policy.arn
+# }
 
-resource "aws_iam_role_policy_attachment" "lambda_basic" {
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
+# resource "aws_iam_role_policy_attachment" "lambda_basic" {
+#   role       = aws_iam_role.lambda_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+# }
 
-data "archive_file" "lambda_zip" {
-  type        = "zip"
-  output_path = "${path.module}/lambda/asg_logger.zip"
-  source {
-    content  = file("${path.module}/lambda/asg_logger.py")
-    filename = "asg_logger.py"
-  }
-}
+# data "archive_file" "lambda_zip" {
+#   type        = "zip"
+#   output_path = "${path.module}/lambda/asg_logger.zip"
+#   source {
+#     content  = file("${path.module}/lambda/asg_logger.py")
+#     filename = "asg_logger.py"
+#   }
+# }
 
-resource "aws_lambda_function" "asg_logger" {
-  filename         = data.archive_file.lambda_zip.output_path
-  function_name    = "${var.stage}-asg-logger-${random_id.rand_id.hex}"
-  role             = aws_iam_role.lambda_role.arn
-  handler          = "asg_logger.handler"
-  runtime          = "python3.9"
-  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
-  timeout          = 30
-  environment {
-    variables = {
-      BUCKET = var.existing_bucket_name
-      PREFIX = "asg-events/"
-    }
-  }
-}
+# resource "aws_lambda_function" "asg_logger" {
+#   filename         = data.archive_file.lambda_zip.output_path
+#   function_name    = "${var.stage}-asg-logger-${random_id.rand_id.hex}"
+#   role             = aws_iam_role.lambda_role.arn
+#   handler          = "asg_logger.handler"
+#   runtime          = "python3.9"
+#   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+#   timeout          = 30
+#   environment {
+#     variables = {
+#       BUCKET = var.existing_bucket_name
+#       PREFIX = "asg-events/"
+#     }
+#   }
+# }
 
-resource "aws_lambda_permission" "allow_sns" {
-  statement_id  = "AllowExecutionFromSNS"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.asg_logger.function_name
-  principal     = "sns.amazonaws.com"
-  source_arn    = aws_sns_topic.asg_notifications.arn
-}
+# resource "aws_lambda_permission" "allow_sns" {
+#   statement_id  = "AllowExecutionFromSNS"
+#   action        = "lambda:InvokeFunction"
+#   function_name = aws_lambda_function.asg_logger.function_name
+#   principal     = "sns.amazonaws.com"
+#   source_arn    = aws_sns_topic.asg_notifications.arn
+# }
 
-resource "aws_sns_topic_subscription" "sns_to_lambda" {
-  topic_arn = aws_sns_topic.asg_notifications.arn
-  protocol  = "lambda"
-  endpoint  = aws_lambda_function.asg_logger.arn
-}
+# resource "aws_sns_topic_subscription" "sns_to_lambda" {
+#   topic_arn = aws_sns_topic.asg_notifications.arn
+#   protocol  = "lambda"
+#   endpoint  = aws_lambda_function.asg_logger.arn
+# }
 
