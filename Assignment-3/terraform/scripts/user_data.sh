@@ -27,6 +27,6 @@ fi
 
 # Start the app
 echo "$(date) - Starting new app instance..." | tee -a $LOG_FILE
-nohup java -jar $JAR_NAME > app.log 2>&1 &
+nohup java -jar $JAR_NAME > techeazy.log 2>&1 &
 
 echo "$(date) - Application started successfully!" | tee -a $LOG_FILE
