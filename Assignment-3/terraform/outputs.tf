@@ -19,7 +19,7 @@ output "existing_s3_bucket" {
 }
 
 # Output EC2 instance IDs (if using multiple instances)
-output "ec2_instance_ids" {
-  value       = aws_instance.app[*].id
-  description = "IDs of the EC2 instances"
-}
+# output "ec2_instance_ids" {
+#   value       = aws_instance.app[*].id
+#   description = "IDs of the EC2 instances"
+# }

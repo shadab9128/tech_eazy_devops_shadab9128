@@ -94,7 +94,7 @@ resource "aws_launch_template" "app_lt" {
     jar_name    = var.existing_jar_key
   }))
 
-  vpc_security_group_ids = [aws_security_group.app_sg.id]
+  vpc_security_group_ids = [aws_security_group.sg.id]
 
   tag_specifications {
     resource_type = "instance"
