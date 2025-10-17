@@ -2,8 +2,8 @@
 set -e
 
 # Variables passed from Terraform template
-BUCKET_NAME="${bucket_name}"
-JAR_NAME="${jar_name}"
+BUCKET_NAME="${existing_bucket_name}"
+JAR_NAME="${existing_jar_key}"
 APP_DIR="/home/ubuntu/app"
 LOG_FILE="/home/ubuntu/startup.log"
 
