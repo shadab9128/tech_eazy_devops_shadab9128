@@ -91,7 +91,7 @@ resource "aws_launch_template" "app_lt" {
 
   user_data = base64encode(templatefile("${path.module}/scripts/user_data.sh", {
     existing_bucket_name = var.existing_bucket_name
-    existing_jar_name    = var.existing_jar_key
+    existing_jar_key    = var.existing_jar_key
   }))
 
   vpc_security_group_ids = [aws_security_group.sg.id]
