@@ -1,0 +1,17 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "S3UploadAndSSM",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject","s3:PutObjectAcl"],
+      "Resource": "arn:aws:s3:::EXISTING_BUCKET_NAME/*"
+    },
+    {
+      "Sid": "AllowSSMSendCommand",
+      "Effect": "Allow",
+      "Action": ["ssm:SendCommand","iam:PassRole"],
+      "Resource": "*"
+    }
+  ]
+}
