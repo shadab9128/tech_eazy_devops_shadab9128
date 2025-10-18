@@ -53,9 +53,7 @@ resource "aws_iam_role_policy" "s3_read_only" {
   name = "${var.stage}-s3-readonly-policy"
   role = aws_iam_role.ec2_role.id
 
-  policy = templatefile("${path.module}/policy/s3_read_only_policy.json.tpl", {
-    bucket_name = var.existing_bucket_name
-  })
+  policy = file("${path.module}/policy/s3_read_only_policy.json")
 }
 
 # Instance profile to attach the IAM role to EC2 instances
