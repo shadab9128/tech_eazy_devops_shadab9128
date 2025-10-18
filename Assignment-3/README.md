@@ -118,3 +118,54 @@ cat nohup.out
 ### Secrets required
 - AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, AMI_ID, EC2_KEY_NAME, S3_BUCKET_NAME, INSTANCE_COUNT.
 
+-------------------------------------------------------------
+# For AutoScaling Extend Version of Assignment-3
+
+## 1. Clone Repository
+```bash
+git clone <your-repo-url>
+cd Assignment-3/terraform
+```
+## 2. Initialize Terraform
+```bash
+terraform init
+```
+## 3. Deploy Infrastructure
+```bash
+terraform apply -auto-approve \
+  -var="region=" \
+  -var="stage=" \
+  -var="" \
+  -var="instance_type=t3.micro" \
+  -var="key_name=your-key-pair" \
+  -var="existing_bucket_name=your-bucket" \
+  -var="existing_jar_key=app.jar"
+```
+## 4. Check Infrastructure Status
+```bash
+terraform output alb_dns_name
+# Test application
+curl http://$(terraform output -raw alb_dns_name)/hello
+```
+## 5. Verify Auto Scaling
+```bash
+# Check Auto Scaling Group
+aws autoscaling describe-auto-scaling-groups
+
+# Check EC2 instances
+aws ec2 describe-instances --filters "Name=instance-state-name,Values=running"
+```
+## 6. Cleanup
+```bash
+terraform destroy -auto-approve
+```
+## 7. Debug Commands
+```bash
+# SSH into instance and check logs
+tail -f /var/log/cloud-init-output.log
+journalctl -u application-service
+
+# Check application status
+curl http://localhost:8080/hello
+ps aux | grep java
+```
