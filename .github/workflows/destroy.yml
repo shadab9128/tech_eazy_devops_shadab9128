@@ -9,8 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      AWS_REGION: eu-north-1
-
+      AWS_REGION: ap-south-1
     defaults:
       run:
         working-directory: Assignment-3/terraform  # Terraform folder path
