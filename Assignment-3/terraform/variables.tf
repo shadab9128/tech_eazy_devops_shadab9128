@@ -7,13 +7,13 @@ variable "stage" {
 variable "region" {
   description = "AWS region"
   type        = string
-  default     = "eu-north-1"
+  default     = "ap-south-1"
 }
 
 variable "ami_id" {
   description = "AMI ID to use for EC2"
   type        = string
-  default     = "ami-0a716d3f3b16d290c"
+  default     = "ami-02d26659fd82cf299"
 }
 
 variable "instance_type" {
@@ -25,7 +25,7 @@ variable "instance_type" {
 variable "key_name" {
   description = "AWS key pair name for SSH access"
   type        = string
-  default     = "wisecow"
+  default     = "techeazy"
 }
 
 variable "github_repo" {
