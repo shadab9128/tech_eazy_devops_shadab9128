@@ -11,7 +11,7 @@
       "Resource": "arn:aws:s3:::alb_logs_bucket_name/*",
       "Condition": {
         "StringEquals": {
-          "aws:SourceAccount": "435917083498"
+          "aws:SourceAccount": "334193281469"
         }
       }
     }
