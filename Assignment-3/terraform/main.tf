@@ -129,6 +129,7 @@ resource "aws_launch_template" "app_lt" {
   user_data = base64encode(templatefile("${path.module}/scripts/user_data.sh", {
     existing_bucket_name = var.existing_bucket_name
     existing_jar_key     = var.existing_jar_key
+    alb_dns_name         = aws_lb.alb.dns_name
   }))
 
   # ✅ Attach the instance profile with S3 read access
@@ -230,4 +231,61 @@ resource "aws_autoscaling_group" "app_asg" {
     value               = "${var.stage}-asg-instance"
     propagate_at_launch = true
   }
+}
+# -----------------------------
+# CloudWatch Alarms for Scaling
+# -----------------------------
+
+# Scale UP when average CPU > 70% for 2 minutes
+resource "aws_autoscaling_policy" "scale_up" {
+  name                   = "${var.stage}-scale-up-policy"
+  scaling_adjustment      = 1
+  adjustment_type         = "ChangeInCapacity"
+  cooldown                = 120
+  autoscaling_group_name  = aws_autoscaling_group.app_asg.name
+}
+
+resource "aws_cloudwatch_metric_alarm" "high_cpu" {
+  alarm_name          = "${var.stage}-high-cpu-alarm"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 70
+
+  alarm_description   = "Scale up when CPU exceeds 70%"
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.app_asg.name
+  }
+
+  alarm_actions = [aws_autoscaling_policy.scale_up.arn]
+}
+
+# Scale DOWN when average CPU < 30% for 2 minutes
+resource "aws_autoscaling_policy" "scale_down" {
+  name                   = "${var.stage}-scale-down-policy"
+  scaling_adjustment      = -1
+  adjustment_type         = "ChangeInCapacity"
+  cooldown                = 120
+  autoscaling_group_name  = aws_autoscaling_group.app_asg.name
+}
+
+resource "aws_cloudwatch_metric_alarm" "low_cpu" {
+  alarm_name          = "${var.stage}-low-cpu-alarm"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 30
+
+  alarm_description   = "Scale down when CPU goes below 30%"
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.app_asg.name
+  }
+
+  alarm_actions = [aws_autoscaling_policy.scale_down.arn]
 }
