@@ -79,7 +79,7 @@ nohup python3 /home/ubuntu/health_check.py > /home/ubuntu/health_check.log 2>&1 
 # -----------------------------
 cat > /home/ubuntu/load_test.sh <<EOF
 #!/bin/bash
-ALB_URL="http://${ALB_DNS_NAME}/hello"
+ALB_URL="http://${alb_dns_name}/hello"
 echo "Starting load test against \$ALB_URL..."
 while true; do
   for i in {1..50}; do
@@ -92,4 +92,4 @@ EOF
 chmod +x /home/ubuntu/load_test.sh
 nohup /home/ubuntu/load_test.sh > /home/ubuntu/load_test.log 2>&1 &
 
-echo "$(date) - Load generator started against http://${ALB_DNS_NAME}/hello" | tee -a $LOG_FILE
+echo "$(date) - Load generator started against http://${alb_dns_name}/hello" | tee -a $LOG_FILE
