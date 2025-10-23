@@ -5,7 +5,7 @@
       "Sid": "S3UploadAndSSM",
       "Effect": "Allow",
       "Action": ["s3:PutObject","s3:PutObjectAcl"],
-      "Resource": "arn:aws:s3:::EXISTING_BUCKET_NAME/*"
+      "Resource": "arn:aws:s3:::echeazy-logs-devops-2/*"
     },
     {
       "Sid": "AllowSSMSendCommand",
