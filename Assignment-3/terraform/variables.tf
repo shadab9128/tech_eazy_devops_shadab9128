@@ -7,13 +7,13 @@ variable "stage" {
 variable "region" {
   description = "AWS region"
   type        = string
-  default     = "ap-south-1"
+  default     = "eu-north-1"
 }
 
 variable "ami_id" {
   description = "AMI ID to use for EC2"
   type        = string
-  default     = "ami-02d26659fd82cf299"
+  default     = "ami-0a716d3f3b16d290c"
 }
 
 variable "instance_type" {
@@ -25,7 +25,7 @@ variable "instance_type" {
 variable "key_name" {
   description = "AWS key pair name for SSH access"
   type        = string
-  default     = "techeazy"
+  default     = "FirstInstance"
 }
 
 variable "github_repo" {
@@ -37,12 +37,12 @@ variable "github_repo" {
 variable "s3_bucket_name" {
   description = "S3 bucket name for logs"
   type        = string
-  default     = "techeazy-logs-devops-1"
+  default     = "techeazy-logs-devops-2"
 }
 variable "existing_bucket_name" {
   description = "Existing S3 bucket name that stores the JAR"
   type        = string
-  default     = "techeazy-logs-devops-1"
+  default     = "techeazy-logs-devops-2"
 }
 
 variable "existing_jar_key" {

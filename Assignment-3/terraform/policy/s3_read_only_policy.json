@@ -5,13 +5,13 @@
       "Sid": "ListBucket",
       "Effect": "Allow",
       "Action": ["s3:ListBucket"],
-      "Resource": "arn:aws:s3:::techeazy-logs-devops-1"
+      "Resource": "arn:aws:s3:::techeazy-logs-devops-2"
     },
     {
       "Sid": "GetObjects",
       "Effect": "Allow",
       "Action": ["s3:GetObject", "s3:HeadObject"],
-      "Resource": "arn:aws:s3:::techeazy-logs-devops-1/*"
+      "Resource": "arn:aws:s3:::techeazy-logs-devops-2/*"
     }
   ]
 }
