@@ -207,24 +207,24 @@ resource "aws_lb_listener" "listener_8080" {
   }
 }
 
-# -----------------------------
-# S3 Bucket for ALB Access Logs
-# -----------------------------
-resource "aws_s3_bucket" "alb_logs" {
-  bucket = "${var.stage}-alb-logs-${random_id.rand_id.hex}"
-  force_destroy = true
+# # -----------------------------
+# # S3 Bucket for ALB Access Logs
+# # -----------------------------
+# resource "aws_s3_bucket" "alb_logs" {
+#   bucket = "${var.stage}-alb-logs-${random_id.rand_id.hex}"
+#   force_destroy = true
 
-  tags = {
-    Name  = "${var.stage}-alb-logs"
-    Stage = var.stage
-  }
-}
+#   tags = {
+#     Name  = "${var.stage}-alb-logs"
+#     Stage = var.stage
+#   }
+# }
 
-# Attach the bucket policy for ALB to write logs
-resource "aws_s3_bucket_policy" "alb_logs_policy" {
-  bucket = aws_s3_bucket.alb_logs.id
-  policy = file("${path.module}/policy/alb_logs_bucket_policy.json")
-}
+# # Attach the bucket policy for ALB to write logs
+# resource "aws_s3_bucket_policy" "alb_logs_policy" {
+#   bucket = aws_s3_bucket.alb_logs.id
+#   policy = file("${path.module}/policy/alb_logs_bucket_policy.json")
+# }
 
 
 # -----------------------------
