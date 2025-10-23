@@ -13,6 +13,7 @@ variable "region" {
 variable "ami_id" {
   description = "AMI ID to use for EC2"
   type        = string
+  default     = "ami-0a716d3f3b16d290c"
 }
 
 variable "instance_type" {
@@ -24,22 +25,24 @@ variable "instance_type" {
 variable "key_name" {
   description = "AWS key pair name for SSH access"
   type        = string
+  default     = "FirstInstance"
 }
 
 variable "github_repo" {
   description = "GitHub repo to clone"
   type        = string
-  default     = "https://github.com/Trainings-TechEazy/test-repo-for-devops"
+  default     = "https://github.com/shadab9128/tech_eazy_devops_shadab9128"
 }
 
 variable "s3_bucket_name" {
   description = "S3 bucket name for logs"
   type        = string
+  default     = "techeazy-logs-devops-2"
 }
 variable "existing_bucket_name" {
   description = "Existing S3 bucket name that stores the JAR"
   type        = string
-  default     = "techeazy-logs-devops"
+  default     = "techeazy-logs-devops-2"
 }
 
 variable "existing_jar_key" {

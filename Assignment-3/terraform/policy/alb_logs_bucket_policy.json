@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowALBLogging",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "logdelivery.elasticloadbalancing.amazonaws.com"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::techeazy-logs-devops-2/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:SourceAccount": "277179579282"
+        },
+        "ArnLike": {
+          "aws:SourceArn": "arn:aws:elasticloadbalancing:eu-north-1:277179579282:loadbalancer/*"
+        }
+      }
+    }
+  ]
+}
